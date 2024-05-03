@@ -291,8 +291,8 @@ class _InfoPageState extends State<InfoPage> {
       List<File>? pendingPhotos = await getDirectoryFiles(pendingFolder, downloadDir, 'jpg');
       if(pendingPhotos != null){
         for(File file in pendingPhotos){
-          String fileName = file.path.split('/').last;
-          if(fileName.contains(infoList[3].toString())){
+          String fileName = file.path.split('/').last.split('_').first;
+          if(fileName == infoList[3].toString()){
             images.add([fileName,file]);
           }
         }
@@ -346,12 +346,12 @@ class _InfoPageState extends State<InfoPage> {
   insertImageWidget(String fileName, File file){
     imageWidgets.add(
       GestureDetector(
-        key: Key(fileName),
+        key: Key(file.path),
         onTap: () {
           showInFullScreen(file.path, context);
         },
         child: Hero(
-          tag: fileName,
+          tag: file.path,
           child:
           Column(
             mainAxisSize: MainAxisSize.min,

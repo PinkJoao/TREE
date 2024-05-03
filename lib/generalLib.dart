@@ -206,6 +206,11 @@ Future<bool?> uploadText(String fileName, String text, OneDriveIDs oneDriveIDs, 
   return true;
 }
 
+Future<File?> storeText(String fileName, String text, String folder, Directory directory) async {
+  Uint8List fileBytes = Uint8List.fromList(utf8.encode(text));
+  await storeFile(fileBytes, fileName.split('.').first + '.txt', folder, directory);
+}
+
 Future<String?> createFolder(String folderName, Directory directory) async {
   final Directory folder = Directory('${directory.path}/$folderName/');
 

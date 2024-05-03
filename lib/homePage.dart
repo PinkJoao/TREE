@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:matrix2d/matrix2d.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -468,7 +468,7 @@ class _HomePageState extends State<HomePage> {
                 child: Text('Buscar por TAG'),
               ),
 
-              ElevatedButton(onPressed: () {print(levels);}, child: Text('teste'))
+              //ElevatedButton(onPressed: () {print(levels);}, child: Text('teste'))
             ],
           )
         )
@@ -684,7 +684,6 @@ class _HomePageState extends State<HomePage> {
 
     showSnackbar(context, 'Planilha movida para a lixeira com sucesso');
 
-
   }
 
   Future loadInventory([bool? loading]) async {
@@ -725,25 +724,6 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
-
-    /*
-    List<dynamic> columns = table.transpose;
-
-    levels.clear();
-    levels.add([null]);
-    List level1 = Matrix2d().addition(Matrix2d().addition(columns[5], columns[1]), columns[4]).toSet().toList();
-    level1.removeWhere((element) => !element.toString().contains('1º NÍVEL'));
-    levels.add(level1);
-    
-    List level2 = Matrix2d().addition(Matrix2d().addition(columns[5], columns[6]), Matrix2d().addition(columns[1], columns[4])).toSet().toList();
-    level2.removeWhere((element) => !element.toString().contains('2º NÍVEL'));
-    levels.add(level2);
-
-    for(List level in levels){
-      print(level);
-    }
-    */
-
     levels.clear();
 
     for (int i = 0; i < 8; i++) {
@@ -756,62 +736,62 @@ class _HomePageState extends State<HomePage> {
         case 1:
           List new_level = [];
           for (List row in table) {
-            if(/*row[17] != null &&*/ row[7] != row[8] && row[17] != 'FOTO 1' && row[1] != '1º NÍVEL'){
+            if(row[1].toString().contains('1')){ // && new_level.where((element) => element[0].toString() == [null].toString() && element[1].toString() == row[5].toString()).isEmpty
               new_level.add([
                 [null], // filter
-                row[5]
+                row[5].toString()
               ]);
             }
           }
-          levels.add(new_level.toSet().toList());
+          levels.add(new_level);
           break;
 
         case 2:
           List new_level = [];
           for (List row in table) {
-            if(/*row[17] != null &&*/ row[7] != row[8] && row[17] != 'FOTO 1' && row[1] != '2º NÍVEL'){
+            if(row[1].toString().contains('2')){ // && new_level.where((element) => element[0].toString() == [row[5]].toString() && element[1].toString() == row[6].toString()).isEmpty
               new_level.add([
-                [row[5]], // filter
-                row[6]
+                [row[5].toString()], // filter
+                row[6].toString()
               ]);
             }
           }
-          levels.add(new_level.toSet().toList());
+          levels.add(new_level);
           break;
 
         case 3:
           List new_level = [];
           for (List row in table) {
-            if(/*row[17] != null &&*/ row[7] != row[8] && row[17] != 'FOTO 1' && row[1] != '3º NÍVEL'){
+            if(row[1].toString().contains('3')){ // && new_level.where((element) => element[0].toString() == [row[5], row[6]].toString() && element[1].toString() == row[7].toString()).isEmpty
               new_level.add([
-                [row[5], row[6]], // filters
-                row[7]
+                [row[5].toString(), row[6].toString()], // filters
+                row[7].toString()
               ]);
             }
           }
-          levels.add(new_level.toSet().toList());
+          levels.add(new_level);
           break;
 
         case 4:
           List new_level = [];
           for (List row in table) {
-            if(/*row[17] != null &&*/ row[7] != row[8] && row[17] != 'FOTO 1' && row[1] != '4º NÍVEL'){
+            if(row[1].toString().contains('4')){ // && new_level.where((element) => element[0].toString() == [row[5], row[6], row[7]].toString() && element[1].toString() == row[8].toString()).isEmpty
               new_level.add([
-                [row[5], row[6], row[7]], // filters
-                row[8]
+                [row[5].toString(), row[6].toString(), row[7].toString()], // filters
+                row[8].toString()
               ]);
             }
           }
-          levels.add(new_level.toSet().toList());
+          levels.add(new_level);
           break;
 
         case 5:
           List new_level = [];
           for (List row in table) {
-            if(/*row[17] != null &&*/ row[7] != row[8] && row[17] != 'FOTO 1'){
+            if(row[1].toString().contains('5')){ // && new_level.where((element) => element[0].toString() == [row[5], row[6], row[7], row[8]].toString() && element[1].toString() == row[9].toString()).isEmpty
               new_level.add([
-                [row[5], row[6], row[7], row[8]], // filters
-                row[9]
+                [row[5].toString(), row[6].toString(), row[7].toString(), row[8].toString()], // filters
+                row[9].toString()
               ]);
             }
           }
@@ -821,10 +801,10 @@ class _HomePageState extends State<HomePage> {
         case 6:
           List new_level = [];
           for (List row in table) {
-            if (/*row[17] != null &&*/ row[7] != row[8] && row[17] != 'FOTO 1') {
+            if (row[7] != row[8] && (row[1].toString().contains('4') || row[1].toString().contains('5') || row[1].toString().contains('6'))) { // && new_level.where((element) => element[0].toString() == [row[5], row[6], row[7], row[8], row[9]].toString() && element[1].toString() == [row[10],row[4]].toString()).isEmpty
               new_level.add([
-                [row[5], row[6], row[7], row[8], row[9]], // filters
-                [row[10],row[4]]//'${row[i + 4]} TAG: [${row[4]}]'
+                [row[5].toString(), row[6].toString(), row[7].toString(), row[8].toString(), row[9].toString()], // filters
+                [row[10].toString(),row[4].toString()]
               ]);
             }
           }
@@ -834,7 +814,7 @@ class _HomePageState extends State<HomePage> {
           case 7:
           List last_level = [];
           for (List row in table) {
-            if(/*row[17] != null &&*/ !(row[5] == row[6] && row[5] == row[7] && row[5] == row[8]) && row[17] != 'FOTO 1'){
+            if(!(row[5] == row[6] && row[5] == row[7] && row[5] == row[8]) && (row[1].toString().contains('4') || row[1].toString().contains('5') || row[1].toString().contains('6'))){
 
               List photos = [row[17],row[18],row[19],row[20]];
               photos.removeWhere((element) => element == null);
@@ -843,18 +823,18 @@ class _HomePageState extends State<HomePage> {
               allPhotos.addAll(photos);
 
               last_level.add([
-                [row[5], row[6], row[7], row[8], row[9], [row[10],row[4]]], // filters
+                [row[5].toString(), row[6].toString(), row[7].toString(), row[8].toString(), row[9].toString(), [row[10].toString(),row[4].toString()]], // filters
                 [
-                  row[10], // 00 description
-                  row[2],  // 01 TAG LOCAL
-                  row[3],  // 02 TAG ENGEMAN
-                  row[4],  // 03 TAG PROPOSTA
-                  row[11], // 04 CODTIPAPL
-                  row[12], // 05 NUMSER
-                  row[13], // 06 MODELO
-                  row[14], // 07 CODFOR
-                  row[15], // 08 NUMPAT
-                  row[16], // 09 OBS
+                  row[10].toString(), // 00 description
+                  row[2].toString(),  // 01 TAG LOCAL
+                  row[3].toString(),  // 02 TAG ENGEMAN
+                  row[4].toString(),  // 03 TAG PROPOSTA
+                  row[11].toString(), // 04 CODTIPAPL
+                  row[12].toString(), // 05 NUMSER
+                  row[13].toString(), // 06 MODELO
+                  row[14].toString(), // 07 CODFOR
+                  row[15].toString(), // 08 NUMPAT
+                  row[16].toString(), // 09 OBS
                   photos   // 10 photos
                 ]
               ]);
@@ -865,12 +845,22 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
-    //await getDuplicates();
+    await getDuplicates();
+
+    //String text = '';
 
     for(List level in levels){
       level.sort((a, b) => a.toString().toLowerCase().compareTo(b.toString().toLowerCase()));
+      /*for(List? active in level){
+        print(active.toString() + '\n\n');
+        text = text + active.toString().replaceAll('\n', ' ') + '\n';
+      }
+
+      print('\n\n');
+      text = text + '\n\n';*/
     }
 
+    //text = text.substring(0,text.length - 3);
     
 
     setState(() {
@@ -878,6 +868,8 @@ class _HomePageState extends State<HomePage> {
     });
 
     setLastUpdate(xlFile.path);
+
+    //await storeText(selectedInventory!['file']!, text, sheetFolder, downloadDir);
 
     setLoading(false);
 
