@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -76,9 +77,7 @@ class _HomePageState extends State<HomePage> {
   List<List> pendingFiles = [];
   List<Widget> pendingWidgets = [];
   List<Widget> inventoryWidgets = [];
-  List<List> table = [];
   List<List> levels = [];
-  List<dynamic> allPhotos = [];
 
   @override
   void initState() {
@@ -98,7 +97,7 @@ class _HomePageState extends State<HomePage> {
       drawerEnableOpenDragGesture: true,
       drawer: loading
       ? null
-      : Container(
+      : SizedBox(
           width: getTotalWidth(context),
           height: getTotalHeight(context),
           child: Drawer(
@@ -132,7 +131,7 @@ class _HomePageState extends State<HomePage> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 DrawerHeader(
-                                  decoration: BoxDecoration( color: Color(0xFFf07f34), ),
+                                  decoration: const BoxDecoration( color: Color(0xFFf07f34), ),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
@@ -145,7 +144,13 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                         child: GestureDetector(
                                           child: Image.asset('assets/images/simicLogo.png'),
-                                          onLongPress: () {
+                                          onLongPress: () async {
+                                            if(levels.isNotEmpty && selectedInventoryName == loadedInventoryName){
+                                              HapticFeedback.mediumImpact();
+                                              await createTxtSheet(levels);
+                                              HapticFeedback.vibrate();
+                                            }
+
                                             /*setState(() {
                                               adminTrigger1 = !adminTrigger1;
 
@@ -163,7 +168,7 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                       ),
 
-                                      SizedBox( height: 20, ),
+                                      const SizedBox( height: 20, ),
 
                                       Text(
                                         'Inventários',
@@ -176,7 +181,7 @@ class _HomePageState extends State<HomePage> {
                                     ],
                                   )
                                 ),
-                                SizedBox(),
+                                const SizedBox(),
                               ] + inventoryWidgets,
                             ),
                           ),
@@ -186,7 +191,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   Expanded(
                     child: Container(
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.centerLeft, 
                           end: Alignment.centerRight,
@@ -228,7 +233,7 @@ class _HomePageState extends State<HomePage> {
       endDrawerEnableOpenDragGesture: true,
       endDrawer: loading
       ? null
-      : Container(
+      : SizedBox(
           width: getTotalWidth(context),
           height: getTotalHeight(context),
           child: Drawer(
@@ -242,7 +247,7 @@ class _HomePageState extends State<HomePage> {
                     child: BackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
                       child: Container(
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.centerRight,
                             end: Alignment.centerLeft,
@@ -263,7 +268,7 @@ class _HomePageState extends State<HomePage> {
                             ),
 
                             Container(
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: Colors.redAccent
                               ),
@@ -275,7 +280,7 @@ class _HomePageState extends State<HomePage> {
                                   await deleteSelected();
                                 },
                                 color: Colors.grey[900], 
-                                icon: Icon(Icons.delete_forever_rounded)
+                                icon: const Icon(Icons.delete_forever_rounded)
                               ),
                             ),
 
@@ -297,7 +302,7 @@ class _HomePageState extends State<HomePage> {
                                   await uploadSelected();
                                 },
                                 color: Colors.grey[900], 
-                                icon: Icon(Icons.cloud_upload_rounded)
+                                icon: const Icon(Icons.cloud_upload_rounded)
                               ),
                             ),
 
@@ -319,7 +324,7 @@ class _HomePageState extends State<HomePage> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               DrawerHeader(
-                                decoration: BoxDecoration( color: Color(0xFFf07f34), ),
+                                decoration: const BoxDecoration( color: Color(0xFFf07f34), ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
@@ -350,7 +355,7 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                     ),
 
-                                    SizedBox( height: 20, ),
+                                    const SizedBox( height: 20, ),
 
                                     Text(
                                       'Fotos pendentes',
@@ -362,7 +367,7 @@ class _HomePageState extends State<HomePage> {
                                   ],
                                 )
                               ),
-                              SizedBox(),
+                              const SizedBox(),
                             ] + pendingWidgets,
                           ),
                         ),
@@ -399,10 +404,10 @@ class _HomePageState extends State<HomePage> {
             children: [
               Card(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                   child: Text(
                     'Última atualização: $lastUpdate',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   )
                 )
               ),
@@ -412,7 +417,7 @@ class _HomePageState extends State<HomePage> {
                 ? () {
                   Navigator.push(
                     context,
-                    new MaterialPageRoute(
+                    MaterialPageRoute(
                       builder: (context) => TreePage(
                         oneDriveIDs: downloadOneDriveIDs,
                         folder: selectedInventory!['folder']!,
@@ -424,7 +429,7 @@ class _HomePageState extends State<HomePage> {
                   );
                 }
                 : null, 
-                child: Text('Árvore de ativos')
+                child: const Text('Árvore de ativos')
               ),
 
               TextField(
@@ -434,8 +439,27 @@ class _HomePageState extends State<HomePage> {
                     searchTerm = value;
                   });
                 },
+                onEditingComplete: selectedInventory != null && loadedInventoryName == selectedInventoryName
+                  ? () {
+                    searchTerm.length < 3
+                      ? searchTerm.isNotEmpty 
+                        ? showSnackbar(context, 'Por favor digite um termo de busca maior')
+                        : showSnackbar(context, 'Por favor digite um termo de busca')
+                      : Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SearchPage(
+                              oneDriveIDs: downloadOneDriveIDs,
+                              folder: selectedInventory!['folder']!,
+                              levels: levels,
+                              searchTerm: searchTerm.replaceAll(' ', '-').toUpperCase(),
+                            )
+                          )
+                        );
+                  }
+                  :null,
                 decoration: InputDecoration(
-                  hintText: 'TAG',
+                  hintText: 'Buscar por TAG',
                   border: const OutlineInputBorder(),
                   hintStyle: TextStyle(
                     color: Colors.grey[600],
@@ -444,31 +468,56 @@ class _HomePageState extends State<HomePage> {
                     horizontal: 15,
                     vertical: 10,
                   ),
+                  suffixIcon: IconButton(
+                    icon: Icon(CupertinoIcons.search, color: selectedInventory != null && loadedInventoryName == selectedInventoryName ? orangeColor : Colors.grey[800]),
+                    onPressed: selectedInventory != null && loadedInventoryName == selectedInventoryName
+                      ? () {
+                        searchTerm.length < 3
+                          ? searchTerm.isNotEmpty
+                            ? showSnackbar(context, 'Por favor digite um termo de busca maior')
+                            : showSnackbar(context, 'Por favor digite um termo de busca')
+                          : Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SearchPage(
+                                  oneDriveIDs: downloadOneDriveIDs,
+                                  folder: selectedInventory!['folder']!,
+                                  levels: levels,
+                                  searchTerm: searchTerm.replaceAll(' ', '-').toUpperCase(),
+                                )
+                              )
+                            );
+                      }
+                      :null,
+                  )
                 ),
               ),
 
-              ElevatedButton(
-                onPressed: selectedInventory != null && loadedInventoryName == selectedInventoryName
-                  ? () {
-                    searchTerm == ''
-                      ? showSnackbar(context, 'Por favor digite um termo de busca')
-                      : Navigator.push(
-                          context,
-                          new MaterialPageRoute(
-                            builder: (context) => SearchPage(
-                              oneDriveIDs: downloadOneDriveIDs,
-                              folder: selectedInventory!['folder']!,
-                              levels: levels,
-                              searchTerm: searchTerm,
-                            )
-                          )
-                        );
-                  }
-                  :null,
-                child: Text('Buscar por TAG'),
+              /*ElevatedButton(
+                onPressed: () {
+                  for(int i = 0; i < levels2[7].length; i++){
+                    if(levels1[7][i].toString() != levels2[7][i].toString()){
+                      print('ativo ${levels1[7][i].toString()} \n\n diverge de ${levels2[7][i].toString()}');
+                    }
+                  };
+                }, 
+                style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.lightBlue)),
+                child: Text('teste')
               ),
 
-              //ElevatedButton(onPressed: () {print(levels);}, child: Text('teste'))
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    if(levels == levels1){
+                      levels = levels2;
+                    }else if( levels == levels2){
+                      levels = levels1;
+                    }
+                  });
+                }, 
+                style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.lightBlue)),
+                child: Text('teste 2')
+              )*/
             ],
           )
         )
@@ -484,7 +533,7 @@ class _HomePageState extends State<HomePage> {
           height: getTotalHeight(context)/10,
           decoration: BoxDecoration(
             color: selectedInventoryName == inventory
-            ? Color.fromARGB(123, 240, 127, 52)
+            ? const Color.fromARGB(123, 240, 127, 52)
             : Colors.transparent,
           ),
           child: TextButton(
@@ -492,6 +541,7 @@ class _HomePageState extends State<HomePage> {
               setInventory(inventory);
             },
             onLongPress: () async {
+              setInventory(inventory);
               if(selectedInventoryName == inventory){
                 await deleteXl();
               }
@@ -521,54 +571,18 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<File?> downloadXl([bool? loading]) async {
-    print('Downloading xlsx file');
-
-    if(loading == true){
-      setLoading(true);
-    }
-
-    if(downloadOneDriveIDs == null){
-      await getDownloadOneDriveIds();
-      if (downloadOneDriveIDs == null){
-        showSnackbar(context, 'Falha na conexão');
-        return null;
-      }
-    }
-
-    Uint8List? fileBytes = await downloadFile(selectedInventory!['file']!, downloadOneDriveIDs!);
-    if(fileBytes == null){
-      showSnackbar(context, 'Falha ao baixar arquivo xlsx');
-      return null;
-    }
-
-    File? xlFile = await storeFile(fileBytes, '${DateFormat('yyyyMMdd HHmmss').format(DateTime.now())} ${selectedInventory!['file']!}', sheetFolder ,downloadDir);
-    if(xlFile == null){
-      showSnackbar(context, 'Falha ao armazenar arquivo xlsx');
-      return null;
-    }
-
-    
-
-    if(loading == true){
-      setLoading(false);
-    }
-
-    return xlFile;
-  }
-
-  Future<bool?> showDownloadDialog() async {
+  Future<bool?> showDownloadDialog([String? text]) async {
     bool? answer;
     await showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Base indisponível, deseja realizar o Download?', 
+          title: Text(text ?? 'Base indisponível, deseja realizar o Download?', 
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: getTotalWidth(context) / 20),
             ),
           actionsAlignment: MainAxisAlignment.spaceAround,
           alignment: Alignment.bottomCenter,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20.0))),
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20.0))),
           actions: [
             TextButton(
               onPressed: () {
@@ -594,15 +608,179 @@ class _HomePageState extends State<HomePage> {
     return answer;
   }
 
-  Future<File?> getFileInDirectory([bool? loading]) async {
-    print('Getting file in directory');
+  setLastUpdate(String filePath){
+    String fileName = filePath.split('/').last.split('.').first;
+    String date = fileName.substring(0,8);
+    String time = fileName.substring(9,15);
+
+    setState(() {
+      lastUpdate = '${date.substring(0,4)}/${date.substring(4,6)}/${date.substring(6,8)} - ${time.substring(0,2)}:${time.substring(2,4)}';
+    });
+  }
+
+  Future deleteXl() async {
+    if(selectedInventoryName != selectedInventory!['name']! || selectedInventory == null || offlineMode == true || downloadOneDriveIDs == null){
+      showSnackbar(context, 'Selecione um inventário para excluir');
+      return;
+    }
+
+    List<File> files = await getDirectoryFiles(sheetFolder, downloadDir) ?? [];
+    if(files.isEmpty){
+      showSnackbar(context, 'Inventário não está armazenado');
+      return;
+    }
+
+    files.removeWhere((element) => !element.path.split('/').last.contains(selectedInventory!['file']!.split('.').first));
+    
+
+    if(files.isEmpty){
+      showSnackbar(context, 'Inventário não está armazenado');
+      return;
+    }
+
+    List<File?> movedFiles = [];
+
+    for(File file in files){
+      File? checkFile = await moveFile(file.path.split('/').last, sheetFolder, trashFolder, downloadDir);
+      movedFiles.add(checkFile);
+    }
+
+    if(movedFiles.isNotEmpty){
+      showSnackbar(context, 'Falha ao excluir inventário');
+      return;
+    }
+
+    setState(() {
+      loadedInventoryName = null;
+    });
+
+    print(loadedInventoryName.toString());
+    print(selectedInventoryName);
+
+    showSnackbar(context, 'Inventário com sucesso');
+
+  }
+
+  Future<File?> downloadTxt([bool? loading]) async {
+    print('Downloading txt file');
+
+    if(loading == true){
+      setLoading(true);
+    }
+
+    if(downloadOneDriveIDs == null){
+      await getDownloadOneDriveIds();
+      if (downloadOneDriveIDs == null){
+        showSnackbar(context, 'Falha na conexão');
+        return null;
+      }
+    }
+
+    Uint8List? fileBytes = await downloadFile(selectedInventory!['file']!.replaceAll('xlsx', 'txt'), downloadOneDriveIDs!);
+    if(fileBytes == null){
+      showSnackbar(context, 'Falha ao baixar arquivo txt');
+      return null;
+    }
+
+    File? txtFile = await storeFile(fileBytes, '${DateFormat('yyyyMMdd HHmmss').format(DateTime.now())} ${selectedInventory!['file']!.replaceAll('xlsx', 'txt')}', sheetFolder ,downloadDir);
+    if(txtFile == null){
+      showSnackbar(context, 'Falha ao armazenar arquivo txt');
+      return null;
+    }
+
+    
+
+    if(loading == true){
+      setLoading(false);
+    }
+
+    return txtFile;
+  }
+
+  Future<File?> downloadXl([bool? loading]) async {
+    print('Downloading xlsx file');
+
+    if(loading == true){
+      setLoading(true);
+    }
+
+    if(downloadOneDriveIDs == null){
+      await getDownloadOneDriveIds();
+      if (downloadOneDriveIDs == null){
+        showSnackbar(context, 'Falha na conexão');
+        return null;
+      }
+    }
+
+    Uint8List? fileBytes = await downloadFile(selectedInventory!['file']!, downloadOneDriveIDs!);
+    if(fileBytes == null){
+      showSnackbar(context, 'Falha ao baixar arquivo xlsx');
+      return null;
+    }
+
+
+    File? xlFile = await storeFile(fileBytes, '${DateFormat('yyyyMMdd HHmmss').format(DateTime.now())} ${selectedInventory!['file']!}', sheetFolder ,downloadDir);
+    if(xlFile == null){
+      showSnackbar(context, 'Falha ao armazenar arquivo xlsx');
+      return null;
+    }
+
+
+    if(loading == true){
+      setLoading(false);
+    }
+
+    return xlFile;
+  }
+
+  Future<File?> getTxtFile([bool? loading]) async {
+    print('Getting text file');
+    List<File> txtFiles = await getDirectoryFiles(sheetFolder, downloadDir, 'txt') ?? [];
+    
+    if(txtFiles.isEmpty){
+      if(offlineMode == true || initializing == true){
+        return null;
+      }else{
+        bool? dialog = await showDownloadDialog('Arquivo de leitura rápida INDISPONÍVEL, deseja realizar o Download?');
+
+        if(dialog == true){
+          File? txtFile = await downloadTxt(loading);
+          return txtFile;
+        }else{
+          return null;
+        }
+      }
+    }else{
+      for(File file in txtFiles){
+        if(file.path.contains(selectedInventory!['file']!.replaceAll('xlsx', 'txt'))){
+          print('File [${file.path}] was found in directory');
+          return file;
+        }
+      }
+      if(offlineMode == true || initializing == true){
+        return null;
+      }else{
+        bool? dialog = await showDownloadDialog('Arquivo de leitura rápida INDISPONÍVEL, deseja realizar o Download?');
+        if(dialog == true){
+          File? txtFile = await downloadTxt(loading);
+          return txtFile;
+        }else{
+          return null;
+        }
+      }
+    }
+  }
+
+
+  Future<File?> getXlFile([bool? loading]) async {
+    print('Getting excel file');
     List<File> xlFiles = await getDirectoryFiles(sheetFolder, downloadDir, 'xlsx') ?? [];
     
     if(xlFiles.isEmpty){
       if(offlineMode == true || initializing == true){
         return null;
       }else{
-        bool? dialog = await showDownloadDialog();
+        bool? dialog = await showDownloadDialog('PLANILHA INDISPONÍVEL, deseja realizar o Download?');
 
         if(dialog == true){
           File? xlFile = await downloadXl(loading);
@@ -621,7 +799,7 @@ class _HomePageState extends State<HomePage> {
       if(offlineMode == true || initializing == true){
         return null;
       }else{
-        bool? dialog = await showDownloadDialog();
+        bool? dialog = await showDownloadDialog('PLANILHA INDISPONÍVEL, deseja realizar o Download?');
         if(dialog == true){
           File? xlFile = await downloadXl(loading);
           return xlFile;
@@ -632,59 +810,311 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  setLastUpdate(String xlFilePath){
-    String fileName = xlFilePath.split('/').last;
-    String date = fileName.substring(0,8);
-    String time = fileName.substring(9,15);
 
-    setState(() {
-      lastUpdate = '${date.substring(0,4)}/${date.substring(4,6)}/${date.substring(6,8)} - ${time.substring(0,2)}:${time.substring(2,4)}';
-    });
-  }
+  Future<List<List>> loadTxtInventory (String text) async { //------------------------------------------------------------
+    List<List> levelList = [];
+    List<String> levelStrings = text.split('\n\n\n');
+    
+    for (int i = 0; i < 8; i++) {
+      switch (i) {
+        case 0:
+          List newList = [null];
+          levelList.add(newList);
+          break;
+        
+        case 1:
+          List<String> activeStrings = levelStrings[i].split('\n');
+          List newLevel = [];
+          for(String activeString in activeStrings){
+            activeString = activeString.substring(2, activeString.length -1);
+            List<String> activeSplit = activeString.split('], ');
+            String activeName = activeSplit.last;
+            List<String> filters = activeSplit.first.split(', ');
+            newLevel.add([filters, activeName]);
+          }
+          levelList.add(newLevel);
+          break;
+        
+        case 2:
+          List<String> activeStrings = levelStrings[i].split('\n');
+          List newLevel = [];
+          for(String activeString in activeStrings){
+            activeString = activeString.substring(2, activeString.length -1);
+            List<String> activeSplit = activeString.split('], ');
+            String activeName = activeSplit.last;
+            List<String> filters = activeSplit.first.split(', ');
+            newLevel.add([filters, activeName]);
+          }
+          levelList.add(newLevel);
+          break;
+        
+        case 3:
+          List<String> activeStrings = levelStrings[i].split('\n');
+          List newLevel = [];
+          for(String activeString in activeStrings){
+            activeString = activeString.substring(2, activeString.length -1);
+            List<String> activeSplit = activeString.split('], ');
+            String activeName = activeSplit.last;
+            List<String> filters = activeSplit.first.split(', ');
+            newLevel.add([filters, activeName]);
+          }
+          levelList.add(newLevel);
+          break;
+        
+        case 4:
+          List<String> activeStrings = levelStrings[i].split('\n');
+          List newLevel = [];
+          for(String activeString in activeStrings){
+            activeString = activeString.substring(2, activeString.length -1);
+            List<String> activeSplit = activeString.split('], ');
+            String activeName = activeSplit.last;
+            List<String> filters = activeSplit.first.split(', ');
+            newLevel.add([filters, activeName]);
+          }
+          levelList.add(newLevel);
+          break;
+        
+        case 5:
+          List<String> activeStrings = levelStrings[i].split('\n');
+          List newLevel = [];
+          for(String activeString in activeStrings){
+            activeString = activeString.substring(2, activeString.length -1);
+            List<String> activeSplit = activeString.split('], ');
+            String activeName = activeSplit.last;
+            List<String> filters = activeSplit.first.split(', ');
+            newLevel.add([filters, activeName]);
+          }
+          levelList.add(newLevel);
+          break;
+        
+        case 6:
+          List<String> activeStrings = levelStrings[i].split('\n');
+          List<List> newLevel = [];
+          for(String activeString in activeStrings){
+            activeString = activeString.substring(2, activeString.length -2);
+            List<String> activeSplit = activeString.split('], [');
+            List<String> activeInfo = activeSplit.last.split(', ');
+            List<String> filters = activeSplit.first.split(', ');
+            newLevel.add([filters, activeInfo]);
+          }
+          levelList.add(newLevel);
+          break;
+        
+        case 7:
+          List<String> activeStrings = levelStrings[i].split('\n');
+          List lastLevel = [];
+          for(String activeString in activeStrings){
+            activeString = activeString.substring(2, activeString.length -3);
+            List<String> activeSplit = activeString.split(']], [');
 
-  Future deleteXl() async {
-    if(selectedInventoryName != selectedInventory!['name']! || selectedInventory == null || offlineMode == true || downloadOneDriveIDs == null){
-      showSnackbar(context, 'Falha ao excluir planilha');
-      return;
-    }
+            String filtersString = activeSplit.first;
+            List<String> commonFilters = filtersString.split(', [').first.split(', ');
+            List<String> compoundFilters = filtersString.split(', [').last.split(', ');
+            List filters = [];
+            filters.addAll(commonFilters);
+            filters.add(compoundFilters);
 
-    List<File> files = await getDirectoryFiles(sheetFolder, downloadDir, 'xlsx') ?? [];
-    if(files.isEmpty){
-      showSnackbar(context, 'Falha ao excluir planilha');
-      return;
-    }
+            String infoString = activeSplit.last;
+            List<String> activeInfo = infoString.split(', [').first.split(', ');
+            List<String> photos = infoString.split(', [').last.split(', ');
+            photos.removeWhere((element) => element == '' || element == 'null' || element == ' ' || element == 'N/A' || element == 'n/a');
 
-    String? fileName;
 
-    for(File file in files){
-      if(file.path.split('/').last.contains(selectedInventory!['file']!)){
-        fileName = file.path.split('/').last;
+            lastLevel.add(
+              [
+                filters,          // 00 filters
+                [
+                  activeInfo[0],  // 01 00 description
+                  activeInfo[1],  // 01 01 localTag
+                  activeInfo[2],  // 01 02 engTag
+                  activeInfo[3],  // 01 03 proposedTag
+                  activeInfo[4],  // 01 04 codtipalp
+                  activeInfo[5],  // 01 05 serial
+                  activeInfo[6],  // 01 06 model
+                  activeInfo[7],  // 01 07 codfor
+                  activeInfo[8],  // 01 08 numpat
+                  activeInfo[9],  // 01 09 observation
+                  photos          // 01 10 photos
+                ]
+              ]
+            );
+          }
+          levelList.add(lastLevel);
+          break;
       }
     }
 
-    if(fileName == null){
-      showSnackbar(context, 'Falha ao excluir planilha');
-      return;
-    }
-
-    print(fileName);
-
-    File? checkFile = await moveFile(fileName, sheetFolder, trashFolder, downloadDir);
-    if(checkFile == null){
-      showSnackbar(context, 'Falha ao excluir planilha');
-      return;
-    }
-
-    setState(() {
-      loadedInventoryName = null;
-    });
-
-    print(loadedInventoryName.toString());
-    print(selectedInventoryName);
-
-    showSnackbar(context, 'Planilha movida para a lixeira com sucesso');
-
+    return levelList;
   }
+
+  Future<List<List>> loadXlInventory (Excel excel) async { //-------------------------------------------------------------
+    Sheet? rawTable = excel.tables[sheetName];
+
+    List table = [];
+
+    for (var row in rawTable!.rows) {
+      List newRow = [];
+      if (row.isNotEmpty) {
+        for (int column = 0; column < rawTable.maxColumns; column++) {
+          if (row[column] == null) {
+            newRow.add(null);
+          } else {
+            newRow.add(row[column]!.value.toString());
+          }
+        }
+        table.add(newRow);
+      }
+    }
+
+    List<List> levelList = [];
+    List<String> allPhotos = [];
+
+    for (int i = 0; i < 8; i++) {
+      switch (i) {
+        case 0:
+          List newList = [null];
+          levelList.add(newList);
+          break;
+
+        case 1:
+          List newLevel = [];
+          for (List row in table) {
+            if(row[1].toString().contains('1')){ // && newLevel.where((element) => element[0].toString() == [null].toString() && element[1].toString() == row[5].toString()).isEmpty
+              newLevel.add([
+                [null], // filter
+                row[5].toString()
+              ]);
+            }
+          }
+          levelList.add(newLevel);
+          break;
+
+        case 2:
+          List newLevel = [];
+          for (List row in table) {
+            if(row[1].toString().contains('2')){ // && newLevel.where((element) => element[0].toString() == [row[5]].toString() && element[1].toString() == row[6].toString()).isEmpty
+              newLevel.add([
+                [row[5].toString()], // filter
+                row[6].toString()
+              ]);
+            }
+          }
+          levelList.add(newLevel);
+          break;
+
+        case 3:
+          List newLevel = [];
+          for (List row in table) {
+            if(row[1].toString().contains('3')){ // && newLevel.where((element) => element[0].toString() == [row[5], row[6]].toString() && element[1].toString() == row[7].toString()).isEmpty
+              newLevel.add([
+                [row[5].toString(), row[6].toString()], // filters
+                row[7].toString()
+              ]);
+            }
+          }
+          levelList.add(newLevel);
+          break;
+
+        case 4:
+          List newLevel = [];
+          for (List row in table) {
+            if(row[1].toString().contains('4')){ // && newLevel.where((element) => element[0].toString() == [row[5], row[6], row[7]].toString() && element[1].toString() == row[8].toString()).isEmpty
+              newLevel.add([
+                [row[5].toString(), row[6].toString(), row[7].toString()], // filters
+                row[8].toString()
+              ]);
+            }
+          }
+          levelList.add(newLevel);
+          break;
+
+        case 5:
+          List newLevel = [];
+          for (List row in table) {
+            if(row[7] != row[8] && (row[1].toString().contains('4') || row[1].toString().contains('5'))){ // && newLevel.where((element) => element[0].toString() == [row[5], row[6], row[7], row[8]].toString() && element[1].toString() == row[9].toString()).isEmpty
+              newLevel.add([
+                [row[5].toString(), row[6].toString(), row[7].toString(), row[8].toString()], // filters
+                row[9].toString()
+              ]);
+            }
+          }
+          levelList.add(newLevel);
+          break;
+
+        case 6:
+          List newLevel = [];
+          for (List row in table) {
+            if (row[7] != row[8] && (row[1].toString().contains('4') || row[1].toString().contains('5') || row[1].toString().contains('6'))) { // && newLevel.where((element) => element[0].toString() == [row[5], row[6], row[7], row[8], row[9]].toString() && element[1].toString() == [row[10],row[4]].toString()).isEmpty
+              newLevel.add([
+                [row[5].toString(), row[6].toString(), row[7].toString(), row[8].toString(), row[9].toString()], // filters
+                [row[10].toString(),row[4].toString()]
+              ]);
+            }
+          }
+          levelList.add(newLevel);
+          break;
+
+          case 7:
+          List lastLevel = [];
+          for (List row in table) {
+            if(!(row[5] == row[6] && row[5] == row[7] && row[5] == row[8]) && (row[1].toString().contains('4') || row[1].toString().contains('5') || row[1].toString().contains('6'))){
+
+              List<String> photos = [row[17].toString(),row[18].toString(),row[19].toString(),row[20].toString()];
+              photos.removeWhere((element) => !element.contains('IMG_'));
+              photos = photos.toSet().toList();
+              allPhotos.addAll(photos);
+
+              lastLevel.add([
+                [row[5].toString(), row[6].toString(), row[7].toString(), row[8].toString(), row[9].toString(), [row[10].toString(),row[4].toString()]], // 00 filters
+                [
+                  row[10].toString(), // 01 00 description
+                  row[2].toString(),  // 01 01 localTag
+                  row[3].toString(),  // 01 02 engTag
+                  row[4].toString(),  // 01 03 proposedTag
+                  row[11].toString(), // 01 04 codtipalp
+                  row[12].toString(), // 01 05 serial
+                  row[13].toString(), // 01 06 model
+                  row[14].toString(), // 01 07 codfor
+                  row[15].toString(), // 01 08 numpat
+                  row[16].toString(), // 01 09 observation
+                  photos              // 01 10 photos
+                ]
+              ]);
+            }
+          }
+          levelList.add(lastLevel);
+          break;
+      }
+    }
+
+    levelList = await getDuplicates(levelList, allPhotos);
+
+    /*for(List level in levelList){
+      level.sort((a, b) => a.toString().toLowerCase().compareTo(b.toString().toLowerCase()));
+    }*/
+
+    return levelList;
+  }
+
+  Future createTxtSheet(List<List> levelList) async {
+    print('Creating TXT file');
+    String text = '';
+
+    for(List level in levelList){
+      for(List? active in level){
+        print(active.toString() + '\n\n');
+        text = '$text${active.toString().replaceAll('\n', ' ')}\n';
+      }
+
+      print('\n\n');
+      text = '$text\n\n';
+    }
+
+    text = text.substring(0,text.length - 3);
+
+    await storeText('${DateFormat('yyyyMMdd HHmmss').format(DateTime.now())} ${selectedInventory!['file']!.replaceAll('xlsx', 'txt')}', text, sheetFolder, downloadDir);
+  }
+
 
   Future loadInventory([bool? loading]) async {
     print('Loading inventory');
@@ -698,204 +1128,82 @@ class _HomePageState extends State<HomePage> {
 
     await getDownloadOneDriveIds();
 
-    File? xlFile = await getFileInDirectory(loading);
-    if(xlFile == null){
-      print('No xlsx file was found in storage');
+    // TRY TO GET THE TXT FILE
+
+    File? textFile = await getTxtFile(loading);
+
+    // IF NOT POSSIBLE, TRY TO GET THE EXCEL FILE
+
+    File? xlFile;
+
+    if(textFile == null){
+      print('txt file was not found');
+      xlFile = await getXlFile(loading);
+    }
+
+    // IF NEITHER OF THE FILES ARE FOUND, RETURN
+
+    if(textFile == null && xlFile == null){
+      print('No sheet data file was found');
+      setLoading(false);
+      return null;
+    }
+
+    // DEPENDING ON THE FILE, LOAD THE INVENTORY ACCORDING
+
+    if(textFile != null){
+      levels = await loadTxtInventory(textFile!.readAsStringSync());
+    }else if (xlFile != null){
+      levels = await loadXlInventory(Excel.decodeBytes(xlFile!.readAsBytesSync()));
+    }
+
+    if(levels.isEmpty){
+      print('Error loading the inventory');
       setLoading(false);
       return;
-    }
+    }else{
 
-    var excel = Excel.decodeBytes(xlFile.readAsBytesSync());
-    var rawTable = excel.tables[sheetName];
+      setState(() {
+        loadedInventoryName = selectedInventoryName;
+      });
 
-    table.clear();
-
-    for (var row in rawTable!.rows) {
-      List new_row = [];
-      if (row.isNotEmpty) {
-        for (int column = 0; column < rawTable.maxColumns; column++) {
-          if (row[column] == null) {
-            new_row.add(null);
-          } else {
-            new_row.add(row[column]!.value.toString());
-          }
-        }
-        table.add(new_row);
-      }
-    }
-
-    levels.clear();
-
-    for (int i = 0; i < 8; i++) {
-      switch (i) {
-        case 0:
-          List new_list = [null];
-          levels.add(new_list);
-          break;
-
-        case 1:
-          List new_level = [];
-          for (List row in table) {
-            if(row[1].toString().contains('1')){ // && new_level.where((element) => element[0].toString() == [null].toString() && element[1].toString() == row[5].toString()).isEmpty
-              new_level.add([
-                [null], // filter
-                row[5].toString()
-              ]);
-            }
-          }
-          levels.add(new_level);
-          break;
-
-        case 2:
-          List new_level = [];
-          for (List row in table) {
-            if(row[1].toString().contains('2')){ // && new_level.where((element) => element[0].toString() == [row[5]].toString() && element[1].toString() == row[6].toString()).isEmpty
-              new_level.add([
-                [row[5].toString()], // filter
-                row[6].toString()
-              ]);
-            }
-          }
-          levels.add(new_level);
-          break;
-
-        case 3:
-          List new_level = [];
-          for (List row in table) {
-            if(row[1].toString().contains('3')){ // && new_level.where((element) => element[0].toString() == [row[5], row[6]].toString() && element[1].toString() == row[7].toString()).isEmpty
-              new_level.add([
-                [row[5].toString(), row[6].toString()], // filters
-                row[7].toString()
-              ]);
-            }
-          }
-          levels.add(new_level);
-          break;
-
-        case 4:
-          List new_level = [];
-          for (List row in table) {
-            if(row[1].toString().contains('4')){ // && new_level.where((element) => element[0].toString() == [row[5], row[6], row[7]].toString() && element[1].toString() == row[8].toString()).isEmpty
-              new_level.add([
-                [row[5].toString(), row[6].toString(), row[7].toString()], // filters
-                row[8].toString()
-              ]);
-            }
-          }
-          levels.add(new_level);
-          break;
-
-        case 5:
-          List new_level = [];
-          for (List row in table) {
-            if(row[1].toString().contains('5')){ // && new_level.where((element) => element[0].toString() == [row[5], row[6], row[7], row[8]].toString() && element[1].toString() == row[9].toString()).isEmpty
-              new_level.add([
-                [row[5].toString(), row[6].toString(), row[7].toString(), row[8].toString()], // filters
-                row[9].toString()
-              ]);
-            }
-          }
-          levels.add(new_level);
-          break;
-
-        case 6:
-          List new_level = [];
-          for (List row in table) {
-            if (row[7] != row[8] && (row[1].toString().contains('4') || row[1].toString().contains('5') || row[1].toString().contains('6'))) { // && new_level.where((element) => element[0].toString() == [row[5], row[6], row[7], row[8], row[9]].toString() && element[1].toString() == [row[10],row[4]].toString()).isEmpty
-              new_level.add([
-                [row[5].toString(), row[6].toString(), row[7].toString(), row[8].toString(), row[9].toString()], // filters
-                [row[10].toString(),row[4].toString()]
-              ]);
-            }
-          }
-          levels.add(new_level);
-          break;
-
-          case 7:
-          List last_level = [];
-          for (List row in table) {
-            if(!(row[5] == row[6] && row[5] == row[7] && row[5] == row[8]) && (row[1].toString().contains('4') || row[1].toString().contains('5') || row[1].toString().contains('6'))){
-
-              List photos = [row[17],row[18],row[19],row[20]];
-              photos.removeWhere((element) => element == null);
-              photos.removeWhere((element) => element == 'null');
-              photos.removeWhere((element) => element == 'N/A');
-              allPhotos.addAll(photos);
-
-              last_level.add([
-                [row[5].toString(), row[6].toString(), row[7].toString(), row[8].toString(), row[9].toString(), [row[10].toString(),row[4].toString()]], // filters
-                [
-                  row[10].toString(), // 00 description
-                  row[2].toString(),  // 01 TAG LOCAL
-                  row[3].toString(),  // 02 TAG ENGEMAN
-                  row[4].toString(),  // 03 TAG PROPOSTA
-                  row[11].toString(), // 04 CODTIPAPL
-                  row[12].toString(), // 05 NUMSER
-                  row[13].toString(), // 06 MODELO
-                  row[14].toString(), // 07 CODFOR
-                  row[15].toString(), // 08 NUMPAT
-                  row[16].toString(), // 09 OBS
-                  photos   // 10 photos
-                ]
-              ]);
-            }
-          }
-          levels.add(last_level);
-          break;
-      }
-    }
-
-    await getDuplicates();
-
-    //String text = '';
-
-    for(List level in levels){
-      level.sort((a, b) => a.toString().toLowerCase().compareTo(b.toString().toLowerCase()));
-      /*for(List? active in level){
-        print(active.toString() + '\n\n');
-        text = text + active.toString().replaceAll('\n', ' ') + '\n';
+      if(textFile != null){
+        setLastUpdate(textFile.path);
+      }else if(xlFile != null){
+        setLastUpdate(xlFile.path);
       }
 
-      print('\n\n');
-      text = text + '\n\n';*/
+      setLoading(false);
+
+      print('Inventory was loaded');
+      return;
     }
-
-    //text = text.substring(0,text.length - 3);
-    
-
-    setState(() {
-      loadedInventoryName = selectedInventoryName;
-    });
-
-    setLastUpdate(xlFile.path);
-
-    //await storeText(selectedInventory!['file']!, text, sheetFolder, downloadDir);
-
-    setLoading(false);
-
-    print('Inventory was loaded');
-    return;
   }
 
-  Future<void> getDuplicates() async {
-    List checkList = [];
+  Future<List<List>> getDuplicates(List<List> levelList, List<String> allPhotos) async {
+    List<List> newLevelList = levelList;
+    List<String> checkList = [];
     List duplicates = [];
+
     for(var photo in allPhotos){
       if(!checkList.contains(photo)){
         checkList.add(photo);
       }else{
         int counter = 1; 
-        String duplicate = photo + '_' + counter.toString();
+        String duplicate = '${photo}_$counter';
         while(duplicates.contains(duplicate)){
           counter += 1;
-          duplicate = photo + '_' + counter.toString();
+          duplicate = duplicate = '${photo}_$counter';
         }
         duplicates.add(duplicate);
       }
     }
 
-    for(List active in levels[7]){
+    for(List active in newLevelList[7]){
       List photos = active[1][10];
+
+      //active[1][10].addAll(duplicates.where((duplicate) => photos.where((photo) => duplicate.startsWith(photo)).isNotEmpty));
+
       for(String duplicate in duplicates){
         String duplicateParent = duplicate.substring(0, duplicate.length - 2);
         if(photos.contains(duplicateParent)){
@@ -903,6 +1211,8 @@ class _HomePageState extends State<HomePage> {
         }
       }
     }
+
+    return newLevelList;
   }
 
   Future deleteSelected() async {
@@ -1079,8 +1389,8 @@ class _HomePageState extends State<HomePage> {
     
     getInventoryWidgets();
     await setNetworkMode();
-    await setInventory(preferences.getString('selectedInventoryName'));
-    await loadInventory();
+    //await setInventory(preferences.getString('selectedInventoryName'));
+    //await loadInventory();
 
     setLoading(false);
 

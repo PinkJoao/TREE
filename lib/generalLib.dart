@@ -32,6 +32,17 @@ void showSnackbar(BuildContext context, String message, [int? time]) {
   ScaffoldMessenger.of(context).showSnackBar(snackBar);
 }
 
+class OneDriveDownloader {
+  OneDriveIDs oneDriveIDs;
+  Key? key;
+
+  OneDriveDownloader(this.oneDriveIDs){
+
+  }
+
+  
+}
+
 class OneDriveIDs {
   var token;
   var driveID;
@@ -95,8 +106,7 @@ Future<OneDriveIDs?> getOneDriveIDs(var token, String folder) async {
     if (item['name'] == folder) {
       var remoteItem = item['remoteItem'];
       var parentReference = remoteItem['parentReference'];
-      OneDriveIDs oneDriveIDs =
-          OneDriveIDs(token, parentReference['driveId'], remoteItem['id']);
+      OneDriveIDs oneDriveIDs = OneDriveIDs(token, parentReference['driveId'], remoteItem['id']);
       return oneDriveIDs;
     }
   }
@@ -208,7 +218,8 @@ Future<bool?> uploadText(String fileName, String text, OneDriveIDs oneDriveIDs, 
 
 Future<File?> storeText(String fileName, String text, String folder, Directory directory) async {
   Uint8List fileBytes = Uint8List.fromList(utf8.encode(text));
-  await storeFile(fileBytes, fileName.split('.').first + '.txt', folder, directory);
+  File? storedFile = await storeFile(fileBytes, fileName.split('.').first + '.txt', folder, directory);
+  return storedFile;
 }
 
 Future<String?> createFolder(String folderName, Directory directory) async {
@@ -381,7 +392,7 @@ double getTotalWidth(BuildContext context) {
 void showInFullScreen(String imagePath, BuildContext context) {
   Navigator.push(
     context,
-    new MaterialPageRoute(
+    MaterialPageRoute(
       builder: (context) => FullScreenImage(imagePath: imagePath),
     ),
   );
@@ -390,7 +401,10 @@ void showInFullScreen(String imagePath, BuildContext context) {
 class FullScreenImage extends StatelessWidget {
   final String imagePath;
 
-  const FullScreenImage({required this.imagePath});
+  const FullScreenImage({
+    Key? key,
+    required this.imagePath
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -421,12 +435,13 @@ class SafeMenuButton extends StatefulWidget {
   final Function(String)? onChanged;
   final String recoveryKey;
 
-  SafeMenuButton({
+  const SafeMenuButton({
+    Key? key,
     required this.defaultItem,
     required this.items,
     this.onChanged,
     required this.recoveryKey,
-  });
+  }) : super(key: key);
 
   @override
   _SafeMenuButtonState createState() => _SafeMenuButtonState();

@@ -1,6 +1,7 @@
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:aad_oauth/model/config.dart';
 import 'package:aad_oauth/aad_oauth.dart';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'generalLib.dart';
@@ -229,6 +230,7 @@ class LoginPageState extends State<LoginPage> {
   }
 
   goToHomeScreen([String? token]){
+    Timer(const Duration(seconds: 2), (){print('Awaiting 2 seconds');});
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
