@@ -139,24 +139,34 @@ class SearchPageState extends State<SearchPage> {
                             oneDriveIDs: widget.oneDriveIDs,
                             folder: widget.folder,
                             levels: widget.levels,
-                            father: [[active[0][0], active[0][1], active[0][2],active[0][3],active[0][4]],active[0][5]],
+                            title: active[1][0],
+                            tag: active[1][3],
                           )
                         )
                       ).then((value) => getPendingFileNames());
                     },
+                    onLongPress: () async {
+                      await takePhotoAndStore(context, active[1][3].replaceAll('/', '%').replaceAll('"', '@'), 'PENDENTES TREE', downloadDir);
+                      getPendingFileNames();
+                    },
                     child: Container(
                       alignment: Alignment.centerLeft,
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
 
                           Flexible(
-                            child: Text('\n${active[1][0].toString()} \n[${active[1][3].toString()}]\n',)
+                            child: Text('\n${active[1][0]} \n[${active[1][3]}]\n',)
                           ),
 
-                          if(pendingFileNames.where((element) => element.startsWith(active[1][3].toString().replaceAll('/', '%').replaceAll('"', '@'))).isNotEmpty)
+                          if(blueCheck(active) && !greenCheck(active))
+                            const IconButton(
+                              onPressed: null, 
+                              icon: Icon(CupertinoIcons.check_mark_circled, color: Color.fromARGB(255, 0, 125, 255),)
+                            ),
+
+                          if(greenCheck(active))
                             const IconButton(
                               onPressed: null, 
                               icon: Icon(CupertinoIcons.check_mark_circled, color: Colors.greenAccent,)
@@ -172,6 +182,20 @@ class SearchPageState extends State<SearchPage> {
         ),
       )
     );
+  }
+
+  bool blueCheck(List active){
+    return (active[1][1] != 'null' && active[1][1] != '');
+  }
+
+  bool greenCheck(List active){
+    if(active[1][10] == 'true'){
+      return true;
+    }
+    if(pendingFileNames.where((element) => element.startsWith(active[1][3].replaceAll('/', '%').replaceAll('"', '@'))).isNotEmpty){
+      return true;
+    }
+    return false;
   }
 
   bool matchSearch(List active){

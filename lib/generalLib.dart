@@ -1,25 +1,31 @@
 import 'dart:io';
+import 'dart:developer';
+import 'dart:math' as math;
+import 'package:intl/intl.dart';
+import 'package:camera/camera.dart';
 import 'dart:convert' show json, utf8;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:photo_view/photo_view.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void showSnackbar(BuildContext context, String message, [int? time]) {
   final snackBar = SnackBar(
     content: Container(
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       height: 40,
       decoration: BoxDecoration(
         color: Colors.grey[700],
-        borderRadius: BorderRadius.all(Radius.circular(10)),
+        borderRadius: const BorderRadius.all(Radius.circular(10)),
       ),
       child: Text(
         message,
         textAlign: TextAlign.center,
-        style: TextStyle(
+        style: const TextStyle(
           color: Colors.white,
         ),
       ),
@@ -30,17 +36,6 @@ void showSnackbar(BuildContext context, String message, [int? time]) {
     elevation: 0,
   );
   ScaffoldMessenger.of(context).showSnackBar(snackBar);
-}
-
-class OneDriveDownloader {
-  OneDriveIDs oneDriveIDs;
-  Key? key;
-
-  OneDriveDownloader(this.oneDriveIDs){
-
-  }
-
-  
 }
 
 class OneDriveIDs {
@@ -55,7 +50,7 @@ class OneDriveIDs {
     if (folderID != null && driveID != null) {
       return true;
     } else {
-      print('OneDrive IDs are not available');
+      log('OneDrive IDs are not available');
       return false;
     }
   }
@@ -86,7 +81,7 @@ Future<http.Response?> request(String url, var token, [String? extension, Uint8L
     
     return response;
   } catch (error) {
-    print('Request error:' + error.toString());
+    log('Request error: ${error.toString()}');
     return null;
   }
 }
@@ -97,7 +92,7 @@ Future<OneDriveIDs?> getOneDriveIDs(var token, String folder) async {
     return null;
   }
   if (response.statusCode != 200) {
-    print('Request error: ${response.statusCode}');
+    log('Request error: ${response.statusCode}');
     return null;
   }
   var sharedItens = json.decode(response.body)['value'];
@@ -110,7 +105,7 @@ Future<OneDriveIDs?> getOneDriveIDs(var token, String folder) async {
       return oneDriveIDs;
     }
   }
-  print("Folder named [$folder] was NOT found");
+  log("Folder named [$folder] was NOT found");
   return null;
 }
 
@@ -127,16 +122,16 @@ Future<Uint8List?> downloadFile(String fileName, OneDriveIDs oneDriveIDs, [bool?
   }
 
   if (response.statusCode == 200) {
-    print("File [$fileName] was successfully downloaded");
+    log("File [$fileName] was successfully downloaded");
     if (showSnackBar == true && context != null) {
       showSnackbar(context, 'Download concluído com sucesso');
     }
     return response.bodyBytes;
 
   }else {
-    print("File [$fileName] download failed");
-    print('Status code:[${response.statusCode}]');
-    print('Response body:[${response.body}]');
+    log("Failed to download the file [$fileName]");
+    log('Status code:[${response.statusCode}]');
+    log('Response body:[${response.body}]');
     if (showSnackBar == true && context != null) {
       showSnackbar(context, 'Falha no download, tente novamente');
     }
@@ -158,22 +153,22 @@ Future<bool?> uploadFile(File file, String fileName, String extension, OneDriveI
   }
 
   if (response.statusCode == 200) {
-    print("File [$fileName] already exists on OneDrive");
+    log("File [$fileName] already exists on OneDrive");
     if (showSnackBar == true && context != null) {
       showSnackbar(context, 'Arquivo já foi enviado antreriormente');
     }
     return false;
   }
   if (response.statusCode != 201) {
-    print("File [$fileName] upload failed");
-    print('Status code:[${response.statusCode}]');
-    print('Response body:[${response.body}]');
+    log("File [$fileName] upload failed");
+    log('Status code:[${response.statusCode}]');
+    log('Response body:[${response.body}]');
     if (showSnackBar == true && context != null) {
       showSnackbar(context, 'Falha no envio, tente novamente');
     }
     return null;
   }
-  print("File [$fileName] uploaded successfully");
+  log("File [$fileName] uploaded successfully");
   if (showSnackBar == true && context != null) {
     showSnackbar(context, 'Arquivo enviado com sucesso');
   }
@@ -194,22 +189,22 @@ Future<bool?> uploadText(String fileName, String text, OneDriveIDs oneDriveIDs, 
   }
 
   if (response.statusCode == 200) {
-    print("File [$fileName] already exists on OneDrive");
+    log("File [$fileName] already exists on OneDrive");
     if (showSnackBar == true && context != null) {
       showSnackbar(context, 'Arquivo já foi enviado antreriormente');
     }
     return false;
   }
   if (response.statusCode != 201) {
-    print("File [$fileName] upload failed");
-    print('Status code:[${response.statusCode}]');
-    print('Response body:[${response.body}]');
+    log("File [$fileName] upload failed");
+    log('Status code:[${response.statusCode}]');
+    log('Response body:[${response.body}]');
     if (showSnackBar == true && context != null) {
       showSnackbar(context, 'Falha no envio, tente novamente');
     }
     return null;
   }
-  print("File [$fileName] uploaded successfully");
+  log("File [$fileName] uploaded successfully");
   if (showSnackBar == true && context != null) {
     showSnackbar(context, 'Arquivo enviado com sucesso');
   }
@@ -218,7 +213,7 @@ Future<bool?> uploadText(String fileName, String text, OneDriveIDs oneDriveIDs, 
 
 Future<File?> storeText(String fileName, String text, String folder, Directory directory) async {
   Uint8List fileBytes = Uint8List.fromList(utf8.encode(text));
-  File? storedFile = await storeFile(fileBytes, fileName.split('.').first + '.txt', folder, directory);
+  File? storedFile = await storeFile(fileBytes, '${fileName.split('.').first}.txt', folder, directory);
   return storedFile;
 }
 
@@ -233,7 +228,7 @@ Future<String?> createFolder(String folderName, Directory directory) async {
       return newFolder.path;
     }
   } catch (error) {
-    print('Error creating folder: $error');
+    log('Error creating folder: $error');
     return null;
   }
 }
@@ -245,10 +240,10 @@ Future<File?> storeFile(Uint8List fileBytes, String fileName, String folder, Dir
 
   try {
     await newFile.writeAsBytes(fileBytes);
-    print('File was stored successfully at: [$filePath]');
+    log('File was stored successfully at: [$filePath]');
     return newFile;
   } catch (error) {
-    print('Error storing file: $error');
+    log('Error storing file: $error');
     return null;
   }
 }
@@ -260,14 +255,14 @@ Future<bool?> deleteFile(String fileName, String folder, Directory directory) as
   try {
     if (await fileToDelete.exists()) {
       await fileToDelete.delete();
-      print('File [$fileName] deleted successfully from: [$filePath]');
+      log('File [$fileName] deleted successfully from: [$filePath]');
       return true;
     } else {
-      print('File [$fileName] does not exist');
+      log('File [$fileName] does not exist');
       return null;
     }
   } catch (error) {
-    print('Error deleting file: $error');
+    log('Error deleting file: $error');
     return false;
   }
 }
@@ -293,14 +288,14 @@ Future<File?> moveFile(String fileName, String sourceFolder, String destinationF
       // Perform the file move by renaming the file
       await sourceFile.rename(destinationPath);
 
-      print('File moved successfully');
+      log('File moved successfully');
       return destinationFile;
     } else {
-      print('Source file does not exist');
+      log('Source file does not exist');
       return null;
     }
   } catch (error) {
-    print('Error moving file: $error');
+    log('Error moving file: $error');
     return null;
   }
 }
@@ -334,11 +329,11 @@ Future<List<File>?> getDirectoryFiles(String folder, Directory directory, [Strin
 
       return files;
     } else {
-      print('Folder [${targetFolder.path}] does not exist');
+      log('Folder [${targetFolder.path}] does not exist');
       return null;
     }
   } catch (error) {
-    print('Error retrieving files: $error');
+    log('Error retrieving files: $error');
     return null;
   }
 }
@@ -372,11 +367,11 @@ Future<List<String>?> getDirectoryFileNames(String folder, Directory directory, 
 
       return fileNames;
     } else {
-      print('Folder [${targetFolder.path}] does not exist');
+      log('Folder [${targetFolder.path}] does not exist');
       return null;
     }
   } catch (error) {
-    print('Error retrieving files: $error');
+    log('Error retrieving files: $error');
     return null;
   }
 }
@@ -420,7 +415,7 @@ class FullScreenImage extends StatelessWidget {
               imageProvider: FileImage(File(imagePath)),
               enableRotation: true,
               tightMode: true,
-              backgroundDecoration: BoxDecoration(color: Colors.transparent),
+              backgroundDecoration: const BoxDecoration(color: Colors.transparent),
             ),
           ),
         ),
@@ -444,10 +439,10 @@ class SafeMenuButton extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _SafeMenuButtonState createState() => _SafeMenuButtonState();
+  SafeMenuButtonState createState() => SafeMenuButtonState();
 }
 
-class _SafeMenuButtonState extends State<SafeMenuButton> {
+class SafeMenuButtonState extends State<SafeMenuButton> {
   late String selectedItem;
   late bool _isLoading;
 
@@ -469,7 +464,7 @@ class _SafeMenuButtonState extends State<SafeMenuButton> {
   @override
   Widget build(BuildContext context) {
     return _isLoading
-    ? CircularProgressIndicator() // Show a loading indicator while loading from SharedPreferences
+    ? const CircularProgressIndicator() // Show a loading indicator while loading from SharedPreferences
     : ElevatedButton(
       style: selectedItem == widget.defaultItem
           ? ElevatedButton.styleFrom(
@@ -514,6 +509,88 @@ class _SafeMenuButtonState extends State<SafeMenuButton> {
     if (widget.onChanged != null) {
       widget.onChanged!(selectedItem);
     }
+  }
+}
+
+
+class SmartCheckboxListTile extends StatefulWidget {
+  final bool initialValue;
+  final ValueChanged<bool?>? onChanged;
+  final Widget title;
+  final Widget? subtitle;
+  final bool isThreeLine;
+  final bool dense;
+  final Widget? secondary;
+  final bool selected;
+  final Color? activeColor;
+  final Color? checkColor;
+  final ListTileControlAffinity controlAffinity;
+  final bool autofocus;
+  final EdgeInsetsGeometry? contentPadding;
+  final ShapeBorder? shape;
+  final Color? tileColor;
+  final Color? selectedTileColor;
+
+  SmartCheckboxListTile({
+    Key? key,
+    this.initialValue = false,
+    this.onChanged,
+    required this.title,
+    this.subtitle,
+    this.isThreeLine = false,
+    this.dense = false,
+    this.secondary,
+    this.selected = false,
+    this.activeColor,
+    this.checkColor,
+    this.controlAffinity = ListTileControlAffinity.platform,
+    this.autofocus = false,
+    this.contentPadding,
+    this.shape,
+    this.tileColor,
+    this.selectedTileColor,
+  }) : super(key: key);
+
+  @override
+  _SmartCheckboxListTileState createState() => _SmartCheckboxListTileState();
+}
+
+class _SmartCheckboxListTileState extends State<SmartCheckboxListTile> {
+  bool check = false;
+
+  @override
+  void initState() {
+    super.initState();
+    check = widget.initialValue;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CheckboxListTile(
+      value: check,
+      onChanged: (bool? value) {
+        setState(() {
+          check = value ?? false;
+        });
+        if (widget.onChanged != null) {
+          widget.onChanged!(value);
+        }
+      },
+      title: widget.title,
+      subtitle: widget.subtitle,
+      isThreeLine: widget.isThreeLine,
+      dense: widget.dense,
+      secondary: widget.secondary,
+      selected: widget.selected,
+      activeColor: widget.activeColor,
+      checkColor: widget.checkColor,
+      controlAffinity: widget.controlAffinity,
+      autofocus: widget.autofocus,
+      contentPadding: widget.contentPadding,
+      shape: widget.shape,
+      tileColor: widget.tileColor,
+      selectedTileColor: widget.selectedTileColor,
+    );
   }
 }
 
@@ -567,5 +644,337 @@ MaterialColor orangeColor = MaterialColor(
   },
 );
 
-//.replaceAll('á', 'a').replaceAll('é', 'e').replaceAll('í', 'i').replaceAll('ó', 'o').replaceAll('ú', 'u').replaceAll('à', 'a').replaceAll('è', 'e').replaceAll('ì', 'i').replaceAll('ò', 'o').replaceAll('ù', 'u').replaceAll('â', 'a').replaceAll('ê', 'e').replaceAll('î', 'i').replaceAll('ô', 'o').replaceAll('û', 'u').replaceAll('ã', 'a').replaceAll('õ', 'o')
-//.replaceAll('Á', 'A').replaceAll('É', 'E').replaceAll('Í', 'I').replaceAll('Ó', 'O').replaceAll('Ú', 'U').replaceAll('À', 'A').replaceAll('È', 'E').replaceAll('Ì', 'I').replaceAll('Ò', 'O').replaceAll('Ù', 'U').replaceAll('Â', 'A').replaceAll('Ê', 'E').replaceAll('Î', 'I').replaceAll('Ô', 'O').replaceAll('Û', 'U').replaceAll('Ã', 'A').replaceAll('Õ', 'O')
+class CameraPage extends StatefulWidget {
+  @override
+  CameraPageState createState() => CameraPageState();
+}
+
+class CameraPageState extends State<CameraPage> {
+  List<CameraDescription> cameras = [];
+  late CameraController cameraController;
+  late Future<void> initializeControllerFuture;
+  bool isCameraInitialized = false;
+  Uint8List? fileBytes;
+  bool isFlashOn = false;
+  int selectedCameraIndex = 0;
+  double currentZoomLevel = 1.0;
+  double maxZoomLevel = 1.0;
+  Offset? _focusPoint;
+  final GlobalKey _cameraKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    initializeCamera();
+  }
+
+  Future<void> initializeCamera() async {
+    try {
+      cameras = await availableCameras();
+      cameraController = CameraController(
+        cameras[selectedCameraIndex],
+        ResolutionPreset.max,
+      );
+
+      initializeControllerFuture = cameraController.initialize();
+      await initializeControllerFuture;
+
+      // Get the maximum zoom level
+      maxZoomLevel = await cameraController.getMaxZoomLevel();
+
+      setState(() {
+        isCameraInitialized = true;
+      });
+    } catch (e) {
+      log('Error initializing camera: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    cameraController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: !isCameraInitialized
+            ? const CircularProgressIndicator()
+            : Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Stack(
+                children: [
+                  if (fileBytes == null)
+                    Align(
+                      alignment: Alignment.center,
+                      child: GestureDetector(
+                        onScaleUpdate: (ScaleUpdateDetails details) {
+                          handleScaleUpdate(details);
+                        },
+                        onTapDown: (TapDownDetails details) {
+                          onViewFinderTap(details);
+                        },
+                        child: CameraPreview(
+                          cameraController,
+                          key: _cameraKey,
+                          child: _focusPoint != null
+                            ? Positioned(
+                              left: _focusPoint!.dx - 40,
+                              top: _focusPoint!.dy - 40,
+                              child: Container(
+                                height: 80,
+                                width: 80,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white)
+                                ),
+                              ),
+                            )
+                            : null,
+                        ),
+                      ),
+                    ),
+
+                  
+
+
+                  if (fileBytes == null)
+                    Align(
+                      alignment: Alignment.topCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 50),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  isFlashOn = !isFlashOn;
+                                });
+                              },
+                              child: Icon(
+                                isFlashOn ? Icons.flash_on : Icons.flash_off,
+                                size: 40,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                  if (fileBytes == null)
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 30),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            GestureDetector(
+                              onTap: selectFromGallery,
+                              child: const Icon(
+                                Icons.photo_library,
+                                size: 40,
+                                color: Colors.white,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: takePicture,
+                              child: const Icon(
+                                Icons.camera_outlined,
+                                size: 70,
+                                color: Colors.orange,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: switchCamera,
+                              child: const Icon(
+                                Icons.switch_camera,
+                                size: 40,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                  if (fileBytes != null)
+                    Center(
+                      child: Hero(
+                        tag: fileBytes.toString(),
+                        child: PhotoView(
+                          imageProvider: Image.memory(fileBytes!).image,
+                          enableRotation: true,
+                          tightMode: true,
+                          backgroundDecoration: const BoxDecoration(color: Colors.transparent),
+                        ),
+                      ),
+                    ),
+
+                  if (fileBytes != null)
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 30),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            GestureDetector(
+                              onTap: discardPhoto,
+                              child: const Icon(
+                                CupertinoIcons.clear_circled,
+                                size: 70,
+                                color: Colors.redAccent,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: confirmPhoto,
+                              child: const Icon(
+                                CupertinoIcons.check_mark_circled,
+                                size: 70,
+                                color: Colors.lightGreenAccent,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> takePicture() async {
+    if (isFlashOn) {
+      cameraController.setFlashMode(FlashMode.torch);
+    }
+
+    try {
+      await initializeControllerFuture;
+      final XFile image = await cameraController.takePicture();
+      File file = File(image.path);
+      Uint8List fileData = await file.readAsBytes();
+
+      setState(() {
+        fileBytes = fileData;
+      });
+    } catch (e) {
+      log('Error taking picture: $e');
+    }
+
+    if (isFlashOn) {
+      cameraController.setFlashMode(FlashMode.off);
+    }
+  }
+
+  void discardPhoto() {
+    if (mounted) {
+      setState(() {
+        fileBytes = null;
+      });
+    }
+  }
+
+  void confirmPhoto() {
+    Navigator.pop(context, fileBytes);
+  }
+
+  void switchCamera() async {
+    selectedCameraIndex = (selectedCameraIndex + 1) % cameras.length;
+    await initializeCamera();
+  }
+
+  Future<void> selectFromGallery() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+      );
+
+      if (result != null) {
+        PlatformFile pickedFile = result.files.first;
+        Uint8List fileData;
+
+        if (pickedFile.bytes != null) {
+          fileData = pickedFile.bytes!;
+        } else {
+          File file = File(pickedFile.path!);
+          fileData = await file.readAsBytes();
+        }
+
+        setState(() {
+          fileBytes = fileData;
+        });
+      } else {
+        log('No file selected');
+      }
+    } catch (e) {
+      log('Error selecting from gallery: $e');
+    }
+  }
+
+  void handleScaleUpdate(ScaleUpdateDetails details) {
+    double sensitivityFactor = 0.05; // Adjust this value to control sensitivity
+    double newZoomLevel = currentZoomLevel + (details.scale - 1.0) * sensitivityFactor;
+
+    if (newZoomLevel < 1.0) {
+      newZoomLevel = 1.0;
+    } else if (newZoomLevel > maxZoomLevel) {
+      newZoomLevel = maxZoomLevel;
+    }
+
+    setState(() {
+      currentZoomLevel = newZoomLevel;
+      cameraController.setZoomLevel(currentZoomLevel);
+    });
+  }
+
+  void onViewFinderTap(TapDownDetails details) {
+    final Offset offset = details.localPosition;
+    final RenderBox renderBox = _cameraKey.currentContext?.findRenderObject() as RenderBox;
+    final Size size = renderBox.size;
+    final Offset focusPoint = Offset(offset.dx / size.width, offset.dy / size.height);
+
+    setState(() {
+      _focusPoint = offset;
+    });
+
+    cameraController.setFocusPoint(focusPoint);
+    cameraController.setExposurePoint(focusPoint);
+  }
+}
+
+Future<Uint8List?> takePhoto(BuildContext context) async {
+  final Uint8List? fileBytes = await Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => CameraPage()),
+  );
+
+  return fileBytes;
+}
+
+Future<bool> takePhotoAndStore(BuildContext context, String prefix, String folder, Directory directory) async {
+  final Uint8List? fileBytes = await Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => CameraPage()),
+  );
+
+  if (fileBytes != null) {
+    File? storedFile = await storeFile(fileBytes, '${prefix}_IMG_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.jpg', folder, directory);
+    if (storedFile != null) {
+      showSnackbar(context, 'Foto armazenada com sucesso');
+      return true;
+    }
+  }
+
+  return false;
+}

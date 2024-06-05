@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
 import 'dart:async';
+import 'dart:developer';
 import 'package:intl/intl.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +10,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lecle_downloads_path_provider/lecle_downloads_path_provider.dart';
 
 import 'treePage.dart';
@@ -33,7 +33,7 @@ class _HomePageState extends State<HomePage> {
   bool initializing = true;
 
   late Directory downloadDir;
-  late SharedPreferences preferences;
+  //late SharedPreferences preferences;
   late OneDriveIDs uploadOneDriveIDs;
 
   OneDriveIDs? downloadOneDriveIDs;
@@ -74,9 +74,13 @@ class _HomePageState extends State<HomePage> {
     'Vila do Conde - PA',
   ];
 
+  List<String> txtInventories = [
+    'Aratu - BA',
+    'Santos - SP',
+  ];
+
   List<List> pendingFiles = [];
   List<Widget> pendingWidgets = [];
-  List<Widget> inventoryWidgets = [];
   List<List> levels = [];
 
   @override
@@ -182,7 +186,36 @@ class _HomePageState extends State<HomePage> {
                                   )
                                 ),
                                 const SizedBox(),
-                              ] + inventoryWidgets,
+
+                                for(String inventory in inventoryList)
+                                  Container(
+                                    height: getTotalHeight(context)/10,
+                                    decoration: BoxDecoration(
+                                      color: selectedInventoryName == inventory
+                                      ? const Color.fromARGB(123, 240, 127, 52)
+                                      : Colors.transparent,
+                                    ),
+                                    child: TextButton(
+                                      onPressed: () async {
+                                        setInventory(inventory);
+                                      },
+                                      onLongPress: () async {
+                                        await deleteInventory(inventory);
+                                        setInventory(null);
+                                      },
+                                      child: Text(
+                                        inventory,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 20,
+                                          color: selectedInventoryName == inventory
+                                          ? Colors.greenAccent
+                                          : orangeColor,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                         ],
@@ -224,7 +257,6 @@ class _HomePageState extends State<HomePage> {
         ),
       onDrawerChanged: (bool isDrawerOpened) async {
         if (isDrawerOpened) {
-          //getInventoryWidgets();
           //await onDrawerOpened();
         } else if (!isDrawerOpened) {
           await onDrawerClosed();
@@ -497,7 +529,7 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () {
                   for(int i = 0; i < levels2[7].length; i++){
                     if(levels1[7][i].toString() != levels2[7][i].toString()){
-                      print('ativo ${levels1[7][i].toString()} \n\n diverge de ${levels2[7][i].toString()}');
+                      log('ativo ${levels1[7][i].toString()} \n\n diverge de ${levels2[7][i].toString()}');
                     }
                   };
                 }, 
@@ -523,44 +555,6 @@ class _HomePageState extends State<HomePage> {
         )
       ),    
     );
-  }
-
-  getInventoryWidgets() {
-    inventoryWidgets.clear();
-    for(String inventory in inventoryList){
-      inventoryWidgets.add(
-        Container(
-          height: getTotalHeight(context)/10,
-          decoration: BoxDecoration(
-            color: selectedInventoryName == inventory
-            ? const Color.fromARGB(123, 240, 127, 52)
-            : Colors.transparent,
-          ),
-          child: TextButton(
-            onPressed: () async {
-              setInventory(inventory);
-            },
-            onLongPress: () async {
-              setInventory(inventory);
-              if(selectedInventoryName == inventory){
-                await deleteXl();
-              }
-            },
-            child: Text(
-              inventory,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                color: selectedInventoryName == inventory
-                ? Colors.greenAccent
-                : orangeColor,
-              ),
-            ),
-          ),
-        )
-      );
-    }
-    setState(() {});
   }
 
   Future onDrawerClosed() async {
@@ -618,19 +612,15 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Future deleteXl() async {
-    if(selectedInventoryName != selectedInventory!['name']! || selectedInventory == null || offlineMode == true || downloadOneDriveIDs == null){
-      showSnackbar(context, 'Selecione um inventário para excluir');
-      return;
-    }
-
+  Future deleteInventory(String inventory) async {
+    
     List<File> files = await getDirectoryFiles(sheetFolder, downloadDir) ?? [];
     if(files.isEmpty){
       showSnackbar(context, 'Inventário não está armazenado');
       return;
     }
 
-    files.removeWhere((element) => !element.path.split('/').last.contains(selectedInventory!['file']!.split('.').first));
+    files.removeWhere((element) => !element.path.split('/').last.contains(inventories[inventory]!['file']!.split('.').first));
     
 
     if(files.isEmpty){
@@ -654,15 +644,15 @@ class _HomePageState extends State<HomePage> {
       loadedInventoryName = null;
     });
 
-    print(loadedInventoryName.toString());
-    print(selectedInventoryName);
+    log(loadedInventoryName.toString());
+    log(selectedInventoryName.toString());
 
     showSnackbar(context, 'Inventário com sucesso');
 
   }
 
   Future<File?> downloadTxt([bool? loading]) async {
-    print('Downloading txt file');
+    log('Downloading txt file');
 
     if(loading == true){
       setLoading(true);
@@ -698,7 +688,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<File?> downloadXl([bool? loading]) async {
-    print('Downloading xlsx file');
+    log('Downloading xlsx file');
 
     if(loading == true){
       setLoading(true);
@@ -734,7 +724,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<File?> getTxtFile([bool? loading]) async {
-    print('Getting text file');
+    log('Getting text file');
     List<File> txtFiles = await getDirectoryFiles(sheetFolder, downloadDir, 'txt') ?? [];
     
     if(txtFiles.isEmpty){
@@ -752,12 +742,12 @@ class _HomePageState extends State<HomePage> {
       }
     }else{
       for(File file in txtFiles){
-        if(file.path.contains(selectedInventory!['file']!.replaceAll('xlsx', 'txt'))){
-          print('File [${file.path}] was found in directory');
+        if(file.path.contains(selectedInventory!['file']!.split('.').first)){
+          log('File [${file.path}] was found in directory');
           return file;
         }
       }
-      if(offlineMode == true || initializing == true){
+      if(offlineMode == true || initializing == true || !txtInventories.contains(selectedInventoryName)){
         return null;
       }else{
         bool? dialog = await showDownloadDialog('Arquivo de leitura rápida INDISPONÍVEL, deseja realizar o Download?');
@@ -773,7 +763,7 @@ class _HomePageState extends State<HomePage> {
 
 
   Future<File?> getXlFile([bool? loading]) async {
-    print('Getting excel file');
+    log('Getting excel file');
     List<File> xlFiles = await getDirectoryFiles(sheetFolder, downloadDir, 'xlsx') ?? [];
     
     if(xlFiles.isEmpty){
@@ -791,8 +781,8 @@ class _HomePageState extends State<HomePage> {
       }
     }else{
       for(File file in xlFiles){
-        if(file.path.contains(selectedInventory!['file']!)){
-          print('File [${file.path}] was found in directory');
+        if(file.path.contains(selectedInventory!['file']!.split('.').first)){
+          log('File [${file.path}] was found in directory');
           return file;
         }
       }
@@ -934,7 +924,8 @@ class _HomePageState extends State<HomePage> {
                   activeInfo[7],  // 01 07 codfor
                   activeInfo[8],  // 01 08 numpat
                   activeInfo[9],  // 01 09 observation
-                  photos          // 01 10 photos
+                  activeInfo[10], // 01 10 wasTagged
+                  photos          // 01 11 photos
                 ]
               ]
             );
@@ -959,7 +950,7 @@ class _HomePageState extends State<HomePage> {
           if (row[column] == null) {
             newRow.add(null);
           } else {
-            newRow.add(row[column]!.value.toString());
+            newRow.add(row[column]!.value.toString().replaceAll(',', ''));
           }
         }
         table.add(newRow);
@@ -979,7 +970,7 @@ class _HomePageState extends State<HomePage> {
         case 1:
           List newLevel = [];
           for (List row in table) {
-            if(row[1].toString().contains('1')){ // && newLevel.where((element) => element[0].toString() == [null].toString() && element[1].toString() == row[5].toString()).isEmpty
+            if(row[1].toString().contains('1')){
               newLevel.add([
                 [null], // filter
                 row[5].toString()
@@ -992,7 +983,7 @@ class _HomePageState extends State<HomePage> {
         case 2:
           List newLevel = [];
           for (List row in table) {
-            if(row[1].toString().contains('2')){ // && newLevel.where((element) => element[0].toString() == [row[5]].toString() && element[1].toString() == row[6].toString()).isEmpty
+            if(row[1].toString().contains('2')){
               newLevel.add([
                 [row[5].toString()], // filter
                 row[6].toString()
@@ -1005,7 +996,7 @@ class _HomePageState extends State<HomePage> {
         case 3:
           List newLevel = [];
           for (List row in table) {
-            if(row[1].toString().contains('3')){ // && newLevel.where((element) => element[0].toString() == [row[5], row[6]].toString() && element[1].toString() == row[7].toString()).isEmpty
+            if(row[1].toString().contains('3')){
               newLevel.add([
                 [row[5].toString(), row[6].toString()], // filters
                 row[7].toString()
@@ -1018,7 +1009,7 @@ class _HomePageState extends State<HomePage> {
         case 4:
           List newLevel = [];
           for (List row in table) {
-            if(row[1].toString().contains('4')){ // && newLevel.where((element) => element[0].toString() == [row[5], row[6], row[7]].toString() && element[1].toString() == row[8].toString()).isEmpty
+            if(row[1].toString().contains('4')){
               newLevel.add([
                 [row[5].toString(), row[6].toString(), row[7].toString()], // filters
                 row[8].toString()
@@ -1031,7 +1022,7 @@ class _HomePageState extends State<HomePage> {
         case 5:
           List newLevel = [];
           for (List row in table) {
-            if(row[7] != row[8] && (row[1].toString().contains('4') || row[1].toString().contains('5'))){ // && newLevel.where((element) => element[0].toString() == [row[5], row[6], row[7], row[8]].toString() && element[1].toString() == row[9].toString()).isEmpty
+            if(row[7] != row[8] && (row[1].toString().contains('4') || row[1].toString().contains('5'))){
               newLevel.add([
                 [row[5].toString(), row[6].toString(), row[7].toString(), row[8].toString()], // filters
                 row[9].toString()
@@ -1044,7 +1035,7 @@ class _HomePageState extends State<HomePage> {
         case 6:
           List newLevel = [];
           for (List row in table) {
-            if (row[7] != row[8] && (row[1].toString().contains('4') || row[1].toString().contains('5') || row[1].toString().contains('6'))) { // && newLevel.where((element) => element[0].toString() == [row[5], row[6], row[7], row[8], row[9]].toString() && element[1].toString() == [row[10],row[4]].toString()).isEmpty
+            if (row[7] != row[8] && (row[1].toString().contains('4') || row[1].toString().contains('5') || row[1].toString().contains('6'))) {
               newLevel.add([
                 [row[5].toString(), row[6].toString(), row[7].toString(), row[8].toString(), row[9].toString()], // filters
                 [row[10].toString(),row[4].toString()]
@@ -1064,6 +1055,8 @@ class _HomePageState extends State<HomePage> {
               photos = photos.toSet().toList();
               allPhotos.addAll(photos);
 
+              bool tagged = row[20].toString().contains('IMG_');
+
               lastLevel.add([
                 [row[5].toString(), row[6].toString(), row[7].toString(), row[8].toString(), row[9].toString(), [row[10].toString(),row[4].toString()]], // 00 filters
                 [
@@ -1077,7 +1070,8 @@ class _HomePageState extends State<HomePage> {
                   row[14].toString(), // 01 07 codfor
                   row[15].toString(), // 01 08 numpat
                   row[16].toString(), // 01 09 observation
-                  photos              // 01 10 photos
+                  tagged.toString(),  // 01 10 wasTagged
+                  photos              // 01 11 photos
                 ]
               ]);
             }
@@ -1097,16 +1091,16 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future createTxtSheet(List<List> levelList) async {
-    print('Creating TXT file');
+    log('Creating TXT file');
     String text = '';
 
     for(List level in levelList){
       for(List? active in level){
-        print(active.toString() + '\n\n');
+        log('${active.toString()}\n\n');
         text = '$text${active.toString().replaceAll('\n', ' ')}\n';
       }
 
-      print('\n\n');
+      log('\n\n');
       text = '$text\n\n';
     }
 
@@ -1117,12 +1111,12 @@ class _HomePageState extends State<HomePage> {
 
 
   Future loadInventory([bool? loading]) async {
-    print('Loading inventory');
+    log('Loading inventory');
     setLoading(true);
 
     if(selectedInventory == null){
       setLoading(false);
-      print('No inventory was selected');
+      log('No inventory was selected');
       return;
     }
 
@@ -1137,20 +1131,20 @@ class _HomePageState extends State<HomePage> {
     File? xlFile;
 
     if(textFile == null){
-      print('txt file was not found');
+      log('Txt file was not found');
       xlFile = await getXlFile(loading);
     }
 
     // IF NEITHER OF THE FILES ARE FOUND, RETURN
 
     if(textFile == null && xlFile == null){
-      print('No sheet data file was found');
+      log('No sheet data file was found');
       setLoading(false);
       return null;
     }
 
     // DEPENDING ON THE FILE, LOAD THE INVENTORY ACCORDING
-
+    
     if(textFile != null){
       levels = await loadTxtInventory(textFile!.readAsStringSync());
     }else if (xlFile != null){
@@ -1158,7 +1152,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     if(levels.isEmpty){
-      print('Error loading the inventory');
+      log('Error loading the inventory');
       setLoading(false);
       return;
     }else{
@@ -1175,7 +1169,7 @@ class _HomePageState extends State<HomePage> {
 
       setLoading(false);
 
-      print('Inventory was loaded');
+      log('Inventory was loaded');
       return;
     }
   }
@@ -1200,14 +1194,14 @@ class _HomePageState extends State<HomePage> {
     }
 
     for(List active in newLevelList[7]){
-      List photos = active[1][10];
+      List photos = active[1][11];
 
-      //active[1][10].addAll(duplicates.where((duplicate) => photos.where((photo) => duplicate.startsWith(photo)).isNotEmpty));
+      //active[1][11].addAll(duplicates.where((duplicate) => photos.where((photo) => duplicate.startsWith(photo)).isNotEmpty));
 
       for(String duplicate in duplicates){
         String duplicateParent = duplicate.substring(0, duplicate.length - 2);
         if(photos.contains(duplicateParent)){
-          active[1][10].add(duplicate);
+          active[1][11].add(duplicate);
         }
       }
     }
@@ -1331,10 +1325,15 @@ class _HomePageState extends State<HomePage> {
 
   setInventory(String? inventoryName) {
     if(inventoryName != null && inventoryList.contains(inventoryName)){
-      selectedInventoryName = inventoryName;
-      preferences.setString('selectedInventoryName', inventoryName);
-      selectedInventory = inventories[inventoryName];
-      getInventoryWidgets();
+      setState(() {
+        selectedInventoryName = inventoryName;
+        //preferences.setString('selectedInventoryName', inventoryName);
+        selectedInventory = inventories[inventoryName];
+      });
+    }else{
+      setState(() {
+        loadedInventoryName = null;
+      });
     }
   }
 
@@ -1385,9 +1384,8 @@ class _HomePageState extends State<HomePage> {
     setLoading(true);
 
     downloadDir = await DownloadsPath.downloadsDirectory() ?? await getApplicationDocumentsDirectory();
-    preferences = await SharedPreferences.getInstance();
+    //preferences = await SharedPreferences.getInstance();
     
-    getInventoryWidgets();
     await setNetworkMode();
     //await setInventory(preferences.getString('selectedInventoryName'));
     //await loadInventory();

@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'generalLib.dart';
 import 'homePage.dart';
 
+import 'dart:developer';
+
 
 void main() {
   runApp(const MainApp());
@@ -144,7 +146,7 @@ class LoginPageState extends State<LoginPage> {
     try {
       loginResult = await oauth.login();
     } catch (error) {
-      print('Authentication failed: $error');
+      log('Authentication failed: $error');
       if (await offlineModeDialog('Falha na autenticação') == true) {
         goToHomeScreen();
         return null;
@@ -157,7 +159,7 @@ class LoginPageState extends State<LoginPage> {
     if(loginResult != null){
       loginResult.fold(
         (failure) async {
-          print('Authentication failed: $failure');
+          log('Authentication failed: $failure');
           if(await offlineModeDialog() == true){
             goToHomeScreen();
             return null;
@@ -168,7 +170,7 @@ class LoginPageState extends State<LoginPage> {
           
         },
         (token) {
-          print('Authentication successful');
+          log('Authentication successful');
           goToHomeScreen(token.accessToken);
           return null;
         },
@@ -230,7 +232,7 @@ class LoginPageState extends State<LoginPage> {
   }
 
   goToHomeScreen([String? token]){
-    Timer(const Duration(seconds: 2), (){print('Awaiting 2 seconds');});
+    Timer(const Duration(seconds: 2), (){log('Awaiting 2 seconds');});
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(

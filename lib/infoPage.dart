@@ -1,9 +1,9 @@
 import 'dart:io';
+import 'dart:developer';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:lecle_downloads_path_provider/lecle_downloads_path_provider.dart';
@@ -14,14 +14,16 @@ class InfoPage extends StatefulWidget {
   final OneDriveIDs? oneDriveIDs;
   final String folder;
   final List levels;
-  final dynamic father;
+  final String title;
+  final String tag;
 
   const InfoPage({
     Key? key,
     required this.oneDriveIDs,
     required this.folder,
     required this.levels,
-    required this.father,
+    required this.title,
+    required this.tag,
   }) : super(key: key);
 
   @override
@@ -29,8 +31,8 @@ class InfoPage extends StatefulWidget {
 }
 
 class InfoPageState extends State<InfoPage> {
-  ImagePicker imagePicker = ImagePicker();
   late Directory downloadDir;
+
   String pendingFolder  = 'PENDENTES TREE';
   String trashFolder    = 'LIXEIRA TREE';
 
@@ -39,30 +41,20 @@ class InfoPageState extends State<InfoPage> {
   bool isBlueExpanded = false;
   bool isPurpleExpanded = false;
 
-  List   infoList    = [];
-  String description = 'DESCRIÇÃO: ';
-  String localTag    = 'TAG LOCAL: ';
-  String engTag      = 'TAG ENGEMAN: ';
-  String proposedTag = 'TAG PROPOSTA: ';
-  String codtipalp   = 'CODTIPAPL: ';
-  String serial      = 'NUMSER: ';
-  String model       = 'MODELO: ';
-  String codfor      = 'CODFOR: ';
-  String numpat      = 'NUMPAT: ';
-  String observation = 'OBSERVAÇÃO: ';
-  String tree        = '';
+  List<dynamic> infoList      = [];
+  Map<String, String> infoMap = {};
 
-  List<String>         imageNames   = [];
+  String customAnomaly = '';
+
+  List<String>           imageNames = [];
   List<String> downloadedImageNames = [];
+  List<String>            anomalies = [];
   List<Widget>         imageWidgets = [];
 
   bool loading = true;
 
   final GlobalKey _containerKey = GlobalKey();
   late Future<double> containerHeight;
-
-  bool showTagDialog = false;
-  String? userTag;
 
   @override
   void initState() {
@@ -85,7 +77,7 @@ class InfoPageState extends State<InfoPage> {
         leading: BackButton(color: Colors.grey[900]),
         title: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          child: Text(widget.father[1][0].toString()),
+          child: Text(widget.title),
         ) 
       ),
       body: Stack(
@@ -107,115 +99,17 @@ class InfoPageState extends State<InfoPage> {
                         }
                       },
                     ),
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                        child: Text(
-                          tree,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        )
-                      )
-                    ),
 
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                        child: Text(
-                          description,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    for(String info in infoMap.values)
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                          child: Text(
+                            info,
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          )
                         )
-                      )
-                    ),
-
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                        child: Text(
-                          localTag,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        )
-                      )
-                    ),
-
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                        child: Text(
-                          engTag,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        )
-                      )
-                    ),
-
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                        child: Text(
-                          proposedTag,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        )
-                      )
-                    ),
-
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                        child: Text(
-                          codtipalp,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        )
-                      )
-                    ),
-
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                        child: Text(
-                          serial,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        )
-                      )
-                    ),
-
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                        child: Text(
-                          model,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        )
-                      )
-                    ),
-
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                        child: Text(
-                          codfor,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        )
-                      )
-                    ),
-
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                        child: Text(
-                          numpat,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        )
-                      )
-                    ),
-
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                        child: Text(
-                          observation,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        )
-                      )
-                    ),
+                      ),
                   ],
                 ),
               ),
@@ -232,7 +126,7 @@ class InfoPageState extends State<InfoPage> {
                 children: [
 
                   Stack(
-                    alignment: Alignment.center,
+                    alignment: Alignment.bottomCenter,
                     children: [
                       CarouselSlider(
                         items: imageWidgets,
@@ -250,6 +144,8 @@ class InfoPageState extends State<InfoPage> {
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              mainAxisSize: MainAxisSize.max,
                               children: [
                                 if (imageWidgets.isNotEmpty && imageNames.where((element) => element.endsWith('_1')).isNotEmpty)
                                   Padding(
@@ -295,7 +191,7 @@ class InfoPageState extends State<InfoPage> {
                                     ),
                                   ),
 
-                                if (imageNames.isEmpty)
+                                if (!loading && imageNames.isEmpty)
                                   Padding(
                                     padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 5),
                                     child: AnimatedContainer(
@@ -339,7 +235,7 @@ class InfoPageState extends State<InfoPage> {
                                     ),
                                   ),
 
-                                if (imageNames.isNotEmpty && imageWidgets.isEmpty)
+                                if (!loading && imageNames.isNotEmpty && imageWidgets.isEmpty)
                                   Padding(
                                     padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 5),
                                     child: AnimatedContainer(
@@ -383,7 +279,7 @@ class InfoPageState extends State<InfoPage> {
                                     ),
                                   ),
 
-                                if (imageNames.isNotEmpty && imageWidgets.isNotEmpty && downloadedImageNames.length < imageNames.length)
+                                if (!loading && imageNames.isNotEmpty && imageWidgets.isNotEmpty && downloadedImageNames.length < imageNames.length)
                                   Padding(
                                     padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 5),
                                     child: AnimatedContainer(
@@ -436,12 +332,101 @@ class InfoPageState extends State<InfoPage> {
                     ],
                   ),
 
-                  ElevatedButton(
-                    onPressed: loading == false ? addPhoto : null,
-                    child: const Text('Adicionar nova foto',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
-                    ),
-                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: loading == false ? addPhoto : null,
+                          child: const Text('Adicionar foto',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 5,),
+
+                      ElevatedButton(
+                          onPressed: loading ? null : (){
+                            anomalies.clear();
+                            List<String> anomalyStrings = [
+                              'anomalia 1',
+                              'anomalia 2',
+                              'anomalia 3',
+                              'anomalia 4',
+                              'anomalia 5',
+                            ];
+                            showModalBottomSheet(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return ListView(
+                                  children: [
+
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                                      child: ElevatedButton(
+                                        onPressed: () async {
+                                          await storeAnomaly();
+                                          Navigator.pop(context);
+                                        }, 
+                                        child: const Text('Salvar anomalia'),
+                                      ),
+                                    ),
+
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                                      child: TextField(
+                                        onChanged: (value){
+                                          customAnomaly = value;
+                                        },
+                                        decoration: InputDecoration(
+                                          hintText: 'Outro:',
+                                          border: const OutlineInputBorder(),
+                                          hintStyle: TextStyle(
+                                            color: Colors.grey[600],
+                                          ),
+                                          contentPadding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+
+                                    
+
+                                    /*for(String anomaly in anomalyStrings)
+                                      SmartCheckboxListTile(
+                                        title: Text(anomaly, style: TextStyle(fontSize: getTotalWidth(context)/28.6, fontWeight: FontWeight.bold)),
+                                        activeColor: Colors.greenAccent,
+                                        checkColor: Colors.grey[900],
+                                        onChanged: (bool? value) async {
+                                          if(value == true){
+                                            anomalies.add(anomaly);
+                                          }else{
+                                            anomalies.remove(anomaly);
+                                          }
+                                        },
+                                      ),*/
+
+
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                          child: const Icon(CupertinoIcons.pencil_ellipsis_rectangle)
+                        ),
+                      
+                      
+
+                      
+
+                    ],
+                  )
+
+                  
                 ],
               ),
             ),
@@ -452,14 +437,9 @@ class InfoPageState extends State<InfoPage> {
   }
 
   List searchActive(){
-    List fatherFilters = [];
-    for(var filter in widget.father[0]){
-      fatherFilters.add(filter);
-    }
-    fatherFilters.add(widget.father[1]);
 
     for(var item in widget.levels[7]){
-      if(item[0].toString() == fatherFilters.toString()){
+      if(item[1][3].toString() == widget.tag){
         return item;
       }
     }
@@ -471,33 +451,34 @@ class InfoPageState extends State<InfoPage> {
     downloadDir = await DownloadsPath.downloadsDirectory()?? await getApplicationDocumentsDirectory();
 
     List active = searchActive();
-    if(active[0] != null){
-      infoList       = active[1];
-      description    = description    + infoList[0].toString();
-      localTag       = localTag       + infoList[1].toString();
-      engTag         = engTag         + infoList[2].toString();
-      proposedTag    = proposedTag    + infoList[3].toString();
-      codtipalp      = codtipalp      + infoList[4].toString();
-      serial         = serial         + infoList[5].toString();
-      model          = model          + infoList[6].toString();
-      codfor         = codfor         + infoList[7].toString();
-      numpat         = numpat         + infoList[8].toString();
-      observation    = observation    + infoList[9].toString();
-      imageNames.addAll(infoList[10]);
-      
-      tree = active[0].toString().split('[')[1].replaceAll(', ', ' || ');
-      tree = tree.substring(0, tree.length - 4);
 
-      if(description    == 'DESCRIÇÃO: '    || description    == 'DESCRIÇÃO: N/A'    || description    == 'DESCRIÇÃO: null'   ){ description    = 'DESCRIÇÃO: INDISPONÍVEL'   ;}
-      if(localTag       == 'TAG LOCAL: '    || localTag       == 'TAG LOCAL: N/A'    || localTag       == 'TAG LOCAL: null'   ){ localTag       = 'TAG LOCAL: INDISPONÍVEL'   ;}
-      if(engTag         == 'TAG ENGEMAN: '  || engTag         == 'TAG ENGEMAN: N/A'  || engTag         == 'TAG ENGEMAN: null' ){ engTag         = 'TAG ENGEMAN: INDISPONÍVEL' ;}
-      if(proposedTag    == 'TAG PROPOSTA: ' || proposedTag    == 'TAG PROPOSTA: N/A' || proposedTag    == 'TAG PROPOSTA: null'){ proposedTag    = 'TAG PROPOSTA: INDISPONÍVEL';}
-      if(codtipalp      == 'CODTIPAPL: '    || codtipalp      == 'CODTIPAPL: N/A'    || codtipalp      == 'CODTIPAPL: null'   ){ codtipalp      = 'CODTIPAPL: INDISPONÍVEL'   ;}
-      if(serial         == 'NUMSER: '       || serial         == 'NUMSER: N/A'       || serial         == 'NUMSER: null'      ){ serial         = 'NUMSER: INDISPONÍVEL'      ;}
-      if(model          == 'MODELO: '       || model          == 'MODELO: N/A'       || model          == 'MODELO: null'      ){ model          = 'MODELO: INDISPONÍVEL'      ;}
-      if(codfor         == 'CODFOR: '       || codfor         == 'CODFOR: N/A'       || codfor         == 'CODFOR: null'      ){ codfor         = 'CODFOR: INDISPONÍVEL'      ;}
-      if(numpat         == 'NUMPAT: '       || numpat         == 'NUMPAT: N/A'       || numpat         == 'NUMPAT: null'      ){ numpat         = 'NUMPAT: INDISPONÍVEL'      ;}
-      if(observation    == 'OBSERVAÇÃO: '   || observation    == 'OBSERVAÇÃO: N/A'   || observation    == 'OBSERVAÇÃO: null'  ){ observation    = 'OBSERVAÇÃO: INDISPONÍVEL'  ;}
+    if(active[0] != null){
+      infoList               = active[1];
+
+      infoMap['proposedTag'] = 'TAG PROPOSTA: ${infoList[3]}';
+      infoMap['description'] = 'DESCRIÇÃO: ${   infoList[0]}';
+      infoMap['tree']        = '';
+      infoMap['localTag']    = 'TAG LOCAL: ${   infoList[1]}';
+      infoMap['engTag']      = 'TAG ENGEMAN: ${ infoList[2]}';
+      infoMap['codtipalp']   = 'CODTIPAPL: ${   infoList[4]}';
+      infoMap['serial']      = 'NUMSER: ${      infoList[5]}';
+      infoMap['model']       = 'MODELO: ${      infoList[6]}';
+      infoMap['codfor']      = 'CODFOR: ${      infoList[7]}';
+      infoMap['numpat']      = 'NUMPAT: ${      infoList[8]}';
+      infoMap['observation'] = 'OBSERVAÇÃO: ${  infoList[9]}';
+
+      
+
+      String tree = active[0].toString().split('[')[1].replaceAll(', ', ' || ');
+      infoMap.update('tree', (value) => tree.substring(0, tree.length - 4));
+
+      imageNames.addAll(infoList[11]);
+
+      for(String key in infoMap.keys){
+        if(infoMap[key]!.endsWith('N/A') || infoMap[key]!.endsWith('null') || infoMap[key]!.endsWith('DESCRIÇÃO: ')){
+          infoMap.update(key, (value) => '${infoMap[key]!.split(': ').first}: INDISPONÍVEL');
+        }
+      }
 
       await insertImageWidgets(imageNames);
 
@@ -505,13 +486,17 @@ class InfoPageState extends State<InfoPage> {
       if(pendingPhotos != null){
         for(File imageFile in pendingPhotos){
           String fileTag = imageFile.path.split('/').last.split('_').first.replaceAll('%', '/').replaceAll('@', '"');
-          if(fileTag == infoList[3].toString()){
+          if(fileTag == infoList[3]){
             insertPendingWidget(imageFile);
           }
         }
       }
     }
 
+    if(imageWidgets.isEmpty){
+      isBlueExpanded = true;
+      isGreenExpanded = true;
+    }
 
     if(mounted){
       setState(() {
@@ -630,7 +615,7 @@ class InfoPageState extends State<InfoPage> {
     }
 
     String fileName = '${imgName.toString()}.jpg';
-    print('getImageFile() was called for the image [$fileName]');
+    log('getImageFile() was called for the image [$fileName]');
 
     List<File> files = await getDirectoryFiles(widget.folder, downloadDir) ?? [];
 
@@ -642,9 +627,9 @@ class InfoPageState extends State<InfoPage> {
       }
     }
 
-    print('File [$fileName] was not found');
+    log('File [$fileName] was not found');
     if(widget.oneDriveIDs != null){
-      print('Trying to download the file [$fileName]');
+      log('Trying to download the file [$fileName]');
 
       Uint8List? fileBytes = await downloadFile(fileName, widget.oneDriveIDs!);
 
@@ -658,183 +643,66 @@ class InfoPageState extends State<InfoPage> {
     return null;
   }
 
-  Future<void> addPhoto() async {
-    
-    if(proposedTag.contains('INDISPONÍVEL') && showTagDialog == false){
-      showSnackbar(context, 'Este ativo não possui tag, ou não foi totalmente carregado');
-      showTagDialog = true;
-      return;
+  Future storeAnomaly() async {
+    String text = '';
 
-    }else if((infoList[3].toString() == '' || infoList[3].toString() == 'null' || infoList[3] == null) && showTagDialog == false){
-      showSnackbar(context, 'Este ativo não possui tag, ou não foi totalmente carregado');
-      showTagDialog = true;
-      return;
-
-    }else if(infoList.length < 3 && showTagDialog == false){
-      showSnackbar(context, 'Este ativo não possui tag, ou não foi totalmente carregado');
-      showTagDialog = true;
-      return;
-      
+    if(customAnomaly != ''){
+      text = 'Anomalia [customizada]: $customAnomaly\n';
+    }
+    for(String anomaly in anomalies){
+      text = '${text}Anomalia [${anomalies.indexOf(anomaly) + 1}]: $anomaly\n';
     }
 
-    if(showTagDialog == true && (userTag == null || userTag == '')){
-      bool shouldReturn = false;
-      String tempTag = '';
-      await showDialog(
-        context: context, 
-        builder: (BuildContext context) {
-          return AlertDialog(
-            actionsAlignment: MainAxisAlignment.spaceAround,
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20.0))),
-            title: const Text('Deseja adicionar tag proposta?'),
-            actions: [
-              TextField(
-                onChanged: (value){
-                  tempTag = value;
-                },
-                decoration: InputDecoration(
-                  hintText: 'TAG PROPOSTA',
-                  border: const OutlineInputBorder(),
-                  hintStyle: TextStyle(
-                    color: Colors.grey[600],
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 15,
-                    vertical: 10,
-                  ),
-                ),
-              ),
+    File? checkFile = await storeText('${infoList[3].replaceAll('/', '%').replaceAll('"', '@')}_TXT_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.txt', text, pendingFolder, downloadDir);
+    if(checkFile != null){
+      showSnackbar(context, 'Anomalia armazenada com sucesso');
+    }
+  }
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  TextButton(
-                    onPressed: (){
-                      Navigator.pop(context, 'null');
-                    }, 
-                    child: const Text('NÃO')
-                  ),
+  Future<void> addPhoto() async {
+    if(infoMap['proposedTag']!.contains('INDISPONÍVEL')){
+      showSnackbar(context, 'Este ativo não possui tag, ou não foi totalmente carregado');
+      log('1');
+      return;
 
-                  TextButton(
-                    onPressed: (){
-                      if(tempTag == null || tempTag == '' || tempTag == 'null' || tempTag.toString().length < 3 ){
-                        showSnackbar(context, 'Por favor digite uma tag');
-                      }else{
-                        Navigator.pop(context, tempTag);
-                      }
-                    }, 
-                    child: const Text('SIM')
-                  )
-                ],
-              ),
+    }else if((infoList[3].toString() == '' || infoList[3].toString() == 'null' || infoList[3] == null)){
+      log('2');
+      showSnackbar(context, 'Este ativo não possui tag, ou não foi totalmente carregado');
+      return;
 
-            ],
-          );
-        }
-      ).then((value){
-          if(value != null && value != '' && value != 'null'){
-            userTag = tempTag;
-          }else{
-            shouldReturn = true;
-          }
-        }
-      );
+    }else if(infoList.length < 3){
+      showSnackbar(context, 'Este ativo não possui tag, ou não foi totalmente carregado');
+      log('3');
+      return;
+    }
 
-      showTagDialog = false;
-      if(shouldReturn){
+    try {
+      Uint8List? fileBytes = await takePhoto(context);
+
+      if (fileBytes == null) {
         return;
       }
 
-    }
+      // Handle the file saving or uploading
+      File? file = await storeFile(fileBytes, '${infoList[3].replaceAll('/', '%').replaceAll('"', '@')}_IMG_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.jpg', pendingFolder, downloadDir);
 
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          actionsAlignment: MainAxisAlignment.spaceAround,
-          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20.0))),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context, 'gallery');
-              },
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Icon(
-                    Icons.add_photo_alternate,
-                    size: getTotalWidth(context) / 12,
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-                    child: Text('Galeria',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: getTotalWidth(context) / 20
-                      )
-                    )
-                  )
-                ]
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context, 'camera');
-              },
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Icon(
-                    Icons.add_a_photo,
-                    size: getTotalWidth(context) / 12,
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-                    child: Text('Câmera',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: getTotalWidth(context) / 20
-                      )
-                    )
-                  )
-                ]
-              ),
-            )
-          ],
-        );
-      },
-    ).then((value) async {
-        if (value != null) {
-          XFile? photo;
-
-          if (value == 'camera') {
-            photo = await imagePicker.pickImage(source: ImageSource.camera);
-          } else if (value == 'gallery') {
-            photo = await imagePicker.pickImage(source: ImageSource.gallery);
-          }
-
-          if (photo == null) {
-            return null;
-          }
-
-          Uint8List fileBytes = await File(photo.path).readAsBytes();
-
-          String photoName = '${userTag ?? infoList[3].toString()}_IMG_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.jpg';
-          File? file = await storeFile(fileBytes, photoName.replaceAll('/', '%').replaceAll('"', '@'), pendingFolder, downloadDir);
-
-          if (file == null) {
-            return null;
-          }
-
-          insertPendingWidget(file);
-          
-          setState(() {
-            containerHeight = getContainerHeight();
-          });
-
-          showSnackbar(context, 'Foto armazenada com sucesso');
-        }
+      if (file == null) {
+        showSnackbar(context, 'Falha no armazenamento da foto');
+        return;
       }
-    );
-  } 
+
+      insertPendingWidget(file);
+      
+      setState(() {
+        containerHeight = getContainerHeight();
+      });
+
+      showSnackbar(context, 'Foto armazenada com sucesso');
+      
+    } catch (e) {
+      showSnackbar(context, 'Falha no armazenamento da foto');
+      log('Error adding photo: $e');
+    }
+  }
+
 }

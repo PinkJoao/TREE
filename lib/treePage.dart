@@ -185,15 +185,20 @@ class TreePageState extends State<TreePage> {
                                 oneDriveIDs: widget.oneDriveIDs,
                                 folder: widget.folder,
                                 levels: widget.levels,
-                                father: [[active[0][0], active[0][1], active[0][2],active[0][3],active[0][4]],active[0][5]],
+                                title: active[1][0],
+                                tag: active[1][3],
+                                //father: [[active[0][0], active[0][1], active[0][2],active[0][3],active[0][4]],active[0][5]],
                               )
                             )
                           ).then((value) => getPendingFileNames());
                         },
+                        onLongPress: () async {
+                          await takePhotoAndStore(context, active[1][3].replaceAll('/', '%').replaceAll('"', '@'), 'PENDENTES TREE', downloadDir);
+                          getPendingFileNamesAndCheckDownload();
+                        },
                         child: Container(
                           alignment: Alignment.centerLeft,
                           child: Row(
-                            mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -202,9 +207,15 @@ class TreePageState extends State<TreePage> {
                                 child: Text('\n${active[1][0].toString()} \n[${active[1][3].toString()}]\n',)
                               ),
 
-                              if(pendingFileNames.where((element) => element.contains(active[1][3].toString())).isNotEmpty)
+                              if(blueCheck(active) && !greenCheck(active))
                                 const IconButton(
-                                  onPressed: null , 
+                                  onPressed: null, 
+                                  icon: Icon(CupertinoIcons.check_mark_circled, color: Color.fromARGB(255, 0, 125, 255),)
+                                ),
+
+                              if(greenCheck(active))
+                                const IconButton(
+                                  onPressed: null, 
                                   icon: Icon(CupertinoIcons.check_mark_circled, color: Colors.greenAccent,)
                                 ),
 
@@ -229,7 +240,8 @@ class TreePageState extends State<TreePage> {
                                   oneDriveIDs: widget.oneDriveIDs,
                                   folder: widget.folder,
                                   levels: widget.levels,
-                                  father: active,
+                                  title: active[1][0].toString(),
+                                  tag: active[1][1].toString(),
                                 )
                               )
                             ).then((value) => getPendingFileNames());
@@ -248,21 +260,32 @@ class TreePageState extends State<TreePage> {
                               )
                             ).then((value) => getPendingFileNamesAndCheckDownload());
                           },
+                        onLongPress: widget.currentLevel == 6 
+                        ? () async {
+                            await takePhotoAndStore(context, active[1][1].replaceAll('/', '%').replaceAll('"', '@'), 'PENDENTES TREE', downloadDir);
+                            getPendingFileNamesAndCheckDownload();
+                          }
+                        : null,
                         child: Container(
                           alignment: Alignment.centerLeft,
                           child: Row(
-                            mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: widget.currentLevel == 6
                             ? [
                               Flexible(
-                                  child: Text('\n${active[1].toString().replaceAll('[', '').replaceAll(', ', ' [')}\n')
+                                  child: Text('\n${active[1][0]}\n[${active[1][1]}]\n')
                                 ),
 
-                                if(pendingFileNames.where((element) => element.startsWith(active[1][1].toString().replaceAll('/', '%').replaceAll('"', '@'))).isNotEmpty)
+                                if(level6BlueCheck(active) && !level6GreenCheck(active))
                                   const IconButton(
-                                    onPressed: null,
+                                    onPressed: null, 
+                                    icon: Icon(CupertinoIcons.check_mark_circled, color: Color.fromARGB(255, 0, 125, 255),)
+                                  ),
+
+                                if(level6GreenCheck(active))
+                                  const IconButton(
+                                    onPressed: null, 
                                     icon: Icon(CupertinoIcons.check_mark_circled, color: Colors.greenAccent,)
                                   ),
                             ]
@@ -296,6 +319,38 @@ class TreePageState extends State<TreePage> {
         ),
       )
     );
+  }
+
+  bool level6BlueCheck(List active){
+    if(widget.levels[7].where((element) => element[1][3] == active[1][1]).first[1][1] != 'null' && widget.levels[7].where((element) => element[1][3] == active[1][1]).first[1][1] != ''){
+      return true;
+    }
+    return false;
+  }
+
+  bool level6GreenCheck(List active){
+    if(pendingFileNames.where((element) => element.startsWith(active[1][1].toString().replaceAll('/', '%').replaceAll('"', '@'))).isNotEmpty){
+      return true;
+    }
+    if(widget.levels[7].where((element) => element[1][3] == active[1][1]).first[1][10] == 'true'){
+      return true;
+    }
+
+    return false;
+  }
+
+  bool blueCheck(List active){
+    return (active[1][1] != 'null' && active[1][1] != '');
+  }
+
+  bool greenCheck(List active){
+    if(active[1][10] == 'true'){
+      return true;
+    }
+    if(pendingFileNames.where((element) => element.startsWith(active[1][3].replaceAll('/', '%').replaceAll('"', '@'))).isNotEmpty){
+      return true;
+    }
+    return false;
   }
 
   bool matchLevel(List active){
@@ -405,7 +460,7 @@ class TreePageState extends State<TreePage> {
   Future<bool> checkDownload() async {
     if(allFilesForThisLevel.isEmpty){
       for(List active in widget.levels[7].where((element) => matchFather(element)      )){
-        allFilesForThisLevel.addAll(active[1][10]);
+        allFilesForThisLevel.addAll(active[1][11]);
       }
     }
     

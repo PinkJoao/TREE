@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'dart:developer';
+
 
 class OneDriveIDs{
   String token;
@@ -20,12 +22,12 @@ class OneDriveIDs{
     }
     http.Response? response = await requestAccess("https://graph.microsoft.com/v1.0/me/drive/sharedWithMe", token);
     if (response == null) {
-      print('Failed to initialize OneDriveIDs');
+      log('Failed to initialize OneDriveIDs');
       return null;
     }
 
     if (response.statusCode != 200) {
-      print('Request error: ${response.statusCode}');
+      log('Request error: ${response.statusCode}');
       return null;
     }
 
@@ -41,20 +43,20 @@ class OneDriveIDs{
         return OneDriveIDs(token, folder, driveID, folderID);
       }
     }
-    print('Folder named [$folder] was NOT found');
+    log('Folder named [$folder] was NOT found');
     return null;
   }
 
   bool check() {
     if(initialized != true){
-      print('OneDriveIDs was not initialized yet');
+      log('OneDriveIDs was not initialized yet');
       return false;
 
     }else if (folderID != null && driveID != null) {
       return true;
 
     } else {
-      print('OneDrive IDs are not available');
+      log('OneDrive IDs are not available');
       return false;
     }
   }
@@ -65,7 +67,7 @@ class OneDriveIDs{
       return response;
 
     } catch (error) {
-      print('Request error:' + error.toString());
+      log('Request error: ${error.toString()}');
       return null;
     }
   }
@@ -78,7 +80,7 @@ class OneDriveManager{
   Key? key;
   String? token;
   List<String> filesToDownload = [];
-  List<String> filesToUpload = [];
+  List<Map<String, String>> filesToUpload = [];
   Directory downloadFolder;
   bool pauseDown = false;
   bool cancelDown = false;
@@ -94,16 +96,16 @@ class OneDriveManager{
   void showSnackbar(BuildContext context, String message, [int? time]) {
     final snackBar = SnackBar(
       content: Container(
-        padding: EdgeInsets.all(12),
+        padding: const EdgeInsets.all(12),
         height: 40,
         decoration: BoxDecoration(
           color: Colors.grey[700],
-          borderRadius: BorderRadius.all(Radius.circular(10)),
+          borderRadius: const BorderRadius.all(Radius.circular(10)),
         ),
         child: Text(
           message,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.white,
           ),
         ),
@@ -123,14 +125,14 @@ class OneDriveManager{
       addFileToDownload(fileName, false);
     }
     if(debugPrint){
-      print('The files $fileNames were added to the download list');
+      log('The files $fileNames were added to the download list');
     }
   }
 
   addFileToDownload(String fileName, [bool debugPrint = true]){
     filesToDownload.insert(0, fileName);
     if(debugPrint){
-      print('File [$fileName] added to the download list');
+      log('File [$fileName] added to the download list');
     }
   }
 
@@ -158,10 +160,10 @@ class OneDriveManager{
       return;
     }
     while(filesToDownload.isNotEmpty && pauseDown == false){
-      print('Downloading file [${filesToDownload.first}]');
+      log('Downloading file [${filesToDownload.first}]');
       Uint8List? fileBytes = await downloadFile(filesToDownload.first);
       if(fileBytes != null){
-        print('file [${filesToDownload.first}] was successfully downloaded');
+        log('file [${filesToDownload.first}] was successfully downloaded');
         File? file = await storeFile(fileBytes, filesToDownload.first);
         if(file != null){
           filesToDownload.remove(filesToDownload.first);
@@ -179,17 +181,21 @@ class OneDriveManager{
 
   // ------------------------------------- UPLOAD --------------------------------------------- //
 
-  addFileListToUpload(List<String> fileNames, [bool debugPrint = true]){
-    for(String fileName in fileNames.reversed){
-      addFileToUpload(fileName, false);
+  addFileListToUpload(List<Map<String, String>> files, [bool debugPrint = true]){
+    for(Map<String, String> file in files.reversed){
+      if(file['name'] != null && file['path'] != null){
+        addFileToUpload(file['name']!, file['path']!, false);
+      }
     }
-    print('The files $fileNames were added to the upload list');
+    if(debugPrint){
+      log('The files $files were added to the upload list');
+    }
   }
 
-  addFileToUpload(String fileName, [bool debugPrint = true]){
-    filesToUpload.insert(0, fileName);
+  addFileToUpload(String fileName, String filePath, [bool debugPrint = true]){
+    filesToUpload.insert(0, {'file': fileName, 'path': filePath});
     if(debugPrint){
-      print('File [$fileName] added to the upload list');
+      log('File [$fileName] added to the upload list');
     }
   }
 
@@ -217,21 +223,20 @@ class OneDriveManager{
       return;
     }
     while(filesToUpload.isNotEmpty && pauseUp == false){
-      print('Uploading file [${filesToDownload.first}]');
-      Uint8List? fileBytes/* = await downloadFile(filesToDownload.first)*/;
-      if(fileBytes == null /*!= null*/){
-        print('file [${filesToDownload.first}] was successfully uploaded');
-        File? file /*= await storeFile(fileBytes, filesToDownload.first)*/;
-        if(file == null /*!= null*/){
-          filesToDownload.remove(filesToDownload.first);
-        }
+      log('Uploading file [${filesToUpload.first['file']}]');
+
+      bool wasUploaded = await uploadFile(File(filesToUpload.first['path']!), filesToUpload.first['file']!) ?? false;
+
+      if(wasUploaded){
+        log('file [${filesToUpload.first['file']}] was successfully uploaded');
+        filesToUpload.remove(filesToUpload.first);
       }
     }
     if(pauseUp){
       pauseUp = false;
     }
     if(cancelUp){
-      filesToDownload.clear();
+      filesToUpload.clear();
       cancelUp = false;
     }
   }
@@ -254,7 +259,7 @@ class OneDriveManager{
       
       return response;
     } catch (error) {
-      print('Request error:' + error.toString());
+      log('Request error: ${error.toString()}');
       return null;
     }
   }
@@ -272,16 +277,16 @@ class OneDriveManager{
     }
 
     if (response.statusCode == 200) {
-      print("File [$fileName] was successfully downloaded");
+      log("File [$fileName] was successfully downloaded");
       if (showSnackBar == true && context != null) {
         showSnackbar(context, 'Download concluído com sucesso');
       }
       return response.bodyBytes;
 
     }else {
-      print("File [$fileName] download failed");
-      print('Status code:[${response.statusCode}]');
-      print('Response body:[${response.body}]');
+      log("Failed to download the file [$fileName]");
+      log('Status code:[${response.statusCode}]');
+      log('Response body:[${response.body}]');
       if (showSnackBar == true && context != null) {
         showSnackbar(context, 'Falha no download, tente novamente');
       }
@@ -289,36 +294,36 @@ class OneDriveManager{
     }
   }
 
-  Future<bool?> uploadFile(File file, String fileName, String extension, [bool? showSnackBar, BuildContext? context]) async {
+  Future<bool?> uploadFile(File file, String fileName, [bool? showSnackBar, BuildContext? context]) async {
     if (!oneDriveIDs.check()) {
       return null;
     }
 
-    Uint8List fileBytes = File(file.path).readAsBytesSync();
-    String url = "https://graph.microsoft.com/v1.0/drives/${oneDriveIDs.driveID}/items/${oneDriveIDs.folderID}:/${fileName + '.' + extension}:/content";
+    Uint8List fileBytes = file.readAsBytesSync();
+    String url = "https://graph.microsoft.com/v1.0/drives/${oneDriveIDs.driveID}/items/${oneDriveIDs.folderID}:/$fileName:/content";
 
-    var response = await request(url, oneDriveIDs.token, extension, fileBytes);
+    var response = await request(url, oneDriveIDs.token, fileName.split('.').last, fileBytes);
     if (response == null) {
       return null;
     }
 
     if (response.statusCode == 200) {
-      print("File [$fileName] already exists on OneDrive");
+      log("File [$fileName] already exists on OneDrive");
       if (showSnackBar == true && context != null) {
         showSnackbar(context, 'Arquivo já foi enviado antreriormente');
       }
       return false;
     }
     if (response.statusCode != 201) {
-      print("File [$fileName] upload failed");
-      print('Status code:[${response.statusCode}]');
-      print('Response body:[${response.body}]');
+      log("File [$fileName] upload failed");
+      log('Status code:[${response.statusCode}]');
+      log('Response body:[${response.body}]');
       if (showSnackBar == true && context != null) {
         showSnackbar(context, 'Falha no envio, tente novamente');
       }
       return null;
     }
-    print("File [$fileName] uploaded successfully");
+    log("File [$fileName] uploaded successfully");
     if (showSnackBar == true && context != null) {
       showSnackbar(context, 'Arquivo enviado com sucesso');
     }
@@ -339,22 +344,22 @@ class OneDriveManager{
     }
 
     if (response.statusCode == 200) {
-      print("File [$fileName] already exists on OneDrive");
+      log("File [$fileName] already exists on OneDrive");
       if (showSnackBar == true && context != null) {
         showSnackbar(context, 'Arquivo já foi enviado antreriormente');
       }
       return false;
     }
     if (response.statusCode != 201) {
-      print("File [$fileName] upload failed");
-      print('Status code:[${response.statusCode}]');
-      print('Response body:[${response.body}]');
+      log("File [$fileName] upload failed");
+      log('Status code:[${response.statusCode}]');
+      log('Response body:[${response.body}]');
       if (showSnackBar == true && context != null) {
         showSnackbar(context, 'Falha no envio, tente novamente');
       }
       return null;
     }
-    print("File [$fileName] uploaded successfully");
+    log("File [$fileName] uploaded successfully");
     if (showSnackBar == true && context != null) {
       showSnackbar(context, 'Arquivo enviado com sucesso');
     }
@@ -376,7 +381,7 @@ class OneDriveManager{
         return newFolder.path;
       }
     } catch (error) {
-      print('Error creating folder: $error');
+      log('Error creating folder: $error');
       return null;
     }
   }
@@ -388,10 +393,10 @@ class OneDriveManager{
 
     try {
       await newFile.writeAsBytes(fileBytes);
-      print('File was stored successfully at: [$filePath]');
+      log('File was stored successfully at: [$filePath]');
       return newFile;
     } catch (error) {
-      print('Error storing file: $error');
+      log('Error storing file: $error');
       return null;
     }
   }
