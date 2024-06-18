@@ -201,7 +201,6 @@ class _HomePageState extends State<HomePage> {
                                       },
                                       onLongPress: () async {
                                         await deleteInventory(inventory);
-                                        setInventory(null);
                                       },
                                       child: Text(
                                         inventory,
@@ -613,6 +612,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future deleteInventory(String inventory) async {
+    setInventory(null);
     
     List<File> files = await getDirectoryFiles(sheetFolder, downloadDir) ?? [];
     if(files.isEmpty){
@@ -635,19 +635,12 @@ class _HomePageState extends State<HomePage> {
       movedFiles.add(checkFile);
     }
 
-    if(movedFiles.isNotEmpty){
+    if(movedFiles.length != files.length){
       showSnackbar(context, 'Falha ao excluir inventário');
       return;
     }
 
-    setState(() {
-      loadedInventoryName = null;
-    });
-
-    log(loadedInventoryName.toString());
-    log(selectedInventoryName.toString());
-
-    showSnackbar(context, 'Inventário com sucesso');
+    showSnackbar(context, 'Inventário excluído com sucesso');
 
   }
 
@@ -728,7 +721,7 @@ class _HomePageState extends State<HomePage> {
     List<File> txtFiles = await getDirectoryFiles(sheetFolder, downloadDir, 'txt') ?? [];
     
     if(txtFiles.isEmpty){
-      if(offlineMode == true || initializing == true){
+      if(offlineMode == true || initializing == true || !txtInventories.contains(selectedInventoryName)){
         return null;
       }else{
         bool? dialog = await showDownloadDialog('Arquivo de leitura rápida INDISPONÍVEL, deseja realizar o Download?');
@@ -939,7 +932,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<List<List>> loadXlInventory (Excel excel) async { //-------------------------------------------------------------
-    Sheet? rawTable = excel.tables[sheetName];
+    Sheet? rawTable;
+    try{
+      rawTable = excel.tables[sheetName];
+    }catch(error){
+      showSnackbar(context, error.toString());
+      log(error.toString());
+      return [];
+    }
 
     List table = [];
 
@@ -1146,14 +1146,15 @@ class _HomePageState extends State<HomePage> {
     // DEPENDING ON THE FILE, LOAD THE INVENTORY ACCORDING
     
     if(textFile != null){
-      levels = await loadTxtInventory(textFile!.readAsStringSync());
+      levels = await loadTxtInventory(textFile.readAsStringSync());
     }else if (xlFile != null){
-      levels = await loadXlInventory(Excel.decodeBytes(xlFile!.readAsBytesSync()));
+      levels = await loadXlInventory(Excel.decodeBytes(xlFile.readAsBytesSync()));
     }
 
     if(levels.isEmpty){
       log('Error loading the inventory');
       setLoading(false);
+      showSnackbar(context, 'Erro ao carregar inventário');
       return;
     }else{
 
@@ -1332,6 +1333,8 @@ class _HomePageState extends State<HomePage> {
       });
     }else{
       setState(() {
+        selectedInventory = null;
+        selectedInventoryName = null;
         loadedInventoryName = null;
       });
     }
