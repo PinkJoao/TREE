@@ -1,3 +1,3 @@
 # TREE
 
-A Flutter/Dart project to help industrial technicians to correctly locate, identify and tag machines
+A Flutter/Dart project developed for Android to help industrial technicians locate, identify and correctly label machinery in factories
